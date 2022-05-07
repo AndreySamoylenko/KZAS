@@ -3,10 +3,25 @@ import RobotAPI as rapi
 import numpy as np
 import serial
 import time
+import RPi.GPIO as GPIO
 
 port = serial.Serial("/dev/ttyS0", baudrate=115200, stopbits=serial.STOPBITS_ONE)
 robot = rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+G=11
+R=15
+B=13
+
+GPIO.setup(R,GPIO.OUT)
+GPIO.setup(G,GPIO.OUT)
+GPIO.setup(B,GPIO.OUT)
+
+GPIO.output(R,GPIO.HIGH)
+GPIO.output(G,GPIO.HIGH)
+GPIO.output(B,GPIO.HIGH)
 
 message = ""
 fps = 0
@@ -14,13 +29,13 @@ fps1 = 0
 fps_time = 0
 
 #[39, 70 ,84] [111, 255, 164] blue
-#[ 0, 39 ,64] [ 61, 177, 126] orange
+#[ 0, 87,87] [ 66 ,186 ,166] orange
 
 lowb=np.array([50, 100 ,0])
 upb=np.array([111, 255, 150])
 
-lowo=np.array([ 0, 49 ,64])
-upo=np.array([ 61, 177, 126])
+lowo=np.array([  0 , 87 ,87])
+upo=np.array([ 66 ,186, 166])
 
 xl1, yl1 = 0, 200
 xr1, yr1 = 620, 200
@@ -37,9 +52,8 @@ e_old = 0
 sr1 = 0
 sr2 = 0
 
-delta=0
 
-speed = 70
+speed = 50
 
 
 perek=0
@@ -58,20 +72,32 @@ tf=time.time()
 
 ii = ""
 flag_start=False
+flag_l=False
+
+
+
 def pd():
-    global  sr1,sr2,e,e_old,delta,deg
+    global  sr1,sr2,e,e_old,deg
     if sr1 > 200:
         sr1 = 200
     if sr2 > 200:
         sr2 = 200
-    e = sr1 - sr2 + delta
-    if -10 < e < 10:
+
+    e = sr2 - sr1
+
+    if -5 < e < 5:
         e = 0
-    kp = 0.2 + 2 * abs(e) // 200
-    kd = 2 + 20 * abs(e) // 200
+
+    kp = 0.5
+    kd = 5
     u = int(e * kp + (e - e_old) * kd)
-    deg = -10 - int(u)
+    deg = 0 + u
     e_old = e
+
+    if sr1 == 0:
+        deg = 30
+    if sr2 == 0:
+        deg = -30
 
     if deg > 90:
         deg = 90
@@ -79,7 +105,7 @@ def pd():
         deg = -90
 
 def perecryostok_lyboy():
-    global xp1, yp1, xp2, yp2, lowb, upb, lowo, upo,color,perek,t111,delta
+    global xp1, yp1, xp2, yp2, lowb, upb, lowo, upo, color, perek, t111,flag_l
     datp1 = frame[yp1:yp2, xp1:xp2]
     cv2.rectangle(datp1,(xp1,yp1),(xp2,yp2),(200,100,100),3)
     if color==None or color=="blue":
@@ -91,9 +117,10 @@ def perecryostok_lyboy():
         for contorb1 in contoursb:
             x, y, w, h = cv2.boundingRect(contorb1)
             a1 = cv2.contourArea(contorb1)
-            if a1 > 200  and  t111 + 0.5 < time.time():
+            if a1 > 500  and  t111 + 0.6 < time.time():
                 color = "blue"
-                delta=24
+                LED(0,0,1)
+                flag_l=True
                 # cv2.drawContours(datp1,contoursb,0,(0,0,0),3)
                 cv2.rectangle(datp1, (x, y), (x + w, y + h), (255, 0, 0), 2)
                 perek+=1
@@ -108,10 +135,12 @@ def perecryostok_lyboy():
         for contoro in contourso:
             x, y, w, h = cv2.boundingRect(contoro)
             a1 = cv2.contourArea(contoro)
-            if a1 > 200 and  t111 + 0.5 < time.time():
+            if a1 > 500 and  t111 + 0.6< time.time():
                 color = "orange"
-                delta = -24
+                LED(1, 1, 0)
                 perek += 1
+                flag_l=True
+
                 t111 = time.time()
                 # cv2.drawContours(datp1, contourso, 0, (100, 100, 100), 3)
                 cv2.rectangle(datp1, (x, y), (x + w, y + h), (0, 100, 255), 2)
@@ -157,30 +186,53 @@ def black_line_right():
 
     cv2.rectangle(frame, (xr1, yr1), (xr2, yr2), (0, 0, 255), 2)
 
+def LED(r,g,b):
+    if r==0:
+        GPIO.output(R, GPIO.HIGH)
+    if r==1:
+        GPIO.output(R, GPIO.LOW)
+
+    if g == 0:
+        GPIO.output(G, GPIO.HIGH)
+    if g == 1:
+        GPIO.output(G, GPIO.LOW)
+
+    if b == 0:
+        GPIO.output(B, GPIO.HIGH)
+    if b == 1:
+        GPIO.output(B, GPIO.LOW)
+
+
+LED(0,0,0)
 
 # d=41,h=35,ds=4,Ds=8,dk=3.8,Dk 7
 while 1:
     key = robot.get_key()
+    if flag_l==True and t111+0.5<time.time() and state==1:
+        LED(0,0,0)
+        flag_l=False
+
     if key != -1:
         pass
-        # if key == 48:
-        #     state = 0
-        # elif key == 49:
-        #     state = 1
-        # elif key == 50:
-        #     state = 2
-        # elif key == 51:
-        #     state = 3
-        # elif key == 52:
-        #     state = 4
-        # elif key == 53:
-        #     state = 5
+        if key == 48:
+            state = 0
+        elif key == 49:
+            state = 1
+        elif key == 50:
+            state = 2
+        elif key == 51:
+            state = 3
+        elif key == 52:
+            state = 4
+        elif key == 53:
+            state = 5
+
 
 
     frame = robot.get_frame(wait_new_frame=1)
 
     if state == 0:
-        state_p = state
+
         if flag_start == False:
             message = "999999$"
         else:
@@ -198,6 +250,7 @@ while 1:
         black_line_right()
         pd()
         perecryostok_lyboy()
+
         if perek==12:
             state=4
             tf = time.time()
@@ -205,27 +258,22 @@ while 1:
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
     if state==2:# stop
-        if sd==True:
-            message="200200$"
-            state=0
-            sd=False
-        state_p=state
-        if color=="blue":
-            message="260260"
-        elif color=="orange":
-            message="140260"
+        pass
          
 
     if state==4:# finish
-        if tf +1.3>time.time():
+        if tf +1.4>time.time():
+            black_line_left()
+            black_line_right()
             pd()
         else:
             deg=0
             speed=0
+
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
-    if state==5:
-        state_p=state# rulevoe
+
+    if state==5:# rulevoe
 
         if key==87:# это W
             speed+=3
@@ -242,18 +290,15 @@ while 1:
         elif key==32:
             speed=0
             deg=0
-        else:
-            if speed>40:
-                speed-=5
-            elif speed<-40:
-                speed += 5
-        if speed > 70:
-            speed = 60
-        if speed < -70:
-            speed = -60
+        elif key==81:
+            deg=0
+        if speed > 80:
+            speed = 80
+        if speed < -80:
+            speed = -80
         if deg>70:
             deg=60
-        if deg <- 70:
+        if deg <  -70:
             deg = -60
 
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
