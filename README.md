@@ -19,5 +19,5 @@ Voila, your program is loaded and if the blue and yellow LEDs on the pyboard are
 
 Once you have selected a program in ![start_robot.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/start_robot.py) the program can be started by pressing a button on the robot.
 But if you turned off and on the robot, then your program will not start.
-In this case, the program that is written in autostart.py is launched.
-Therefore, you can write the desired program in autostart.py and you will not need to restart the program through ![start_robot.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/start_robot.py).
+In this case, the program that is written in ![autostart.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/autostart.py) is launched.
+Therefore, you can write the desired program in ![autostart.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/autostart.py) and you will not need to restart the program through ![start_robot.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/start_robot.py).
