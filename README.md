@@ -1,3 +1,24 @@
+# Program Explanations
+
+main.py is a helper program executable by pyboard that takes messages from the raspberry and converts them into a servo angle and motor speed.
+qualification.py final1.py final2.py these programs are uploaded to raspberry and have a similar structure.
+All of them can be divided into 3 stages of work:
+
+1. button waiting
+2. travel
+3. finish
+(in the program, the stages are defined by the "state" variable)
+
+In the first step, the raspberry sends the message "$999999" which the pyboard reads and waits for the value to change while sending the button readings in parallel.
+When the button is pressed the pyboard sends "1$".
+raspberry accepts this and moves on to the next stage.
+
+The stage of travel for all three programs is different.
+
+
+
+
+
 # Сonnecting to pyboard
 
 To connect to the pyboard, you need to connect the micro usb cable to your computer, and open the pyboard as a USB flash drive in the explorer.
