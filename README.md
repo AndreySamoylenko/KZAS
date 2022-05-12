@@ -27,7 +27,20 @@ And if the robot sees the cube, then it, ignoring the black lines, calculates a 
 ![final2.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final2.py) is an improved version of ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py).
 Basically, useful features have been added to it that allow you to improve the result in the form of acceleration if there are no cubes and an improved perspective.
 
+all previous programs were for the passage of the route, subsequent programs will be useful to us in a different way.
 
+RobotAPI.py creates a class that is responsible for reading the camera and, in principle, the operation of the raspberry and the ability to connect to it.
+
+![start_robot.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/start_robot.py) using RobotAPI.py makes it easier for us to use the robot.
+it connects via ip to the raspberry via a wi-fi network.
+In the window created by the program, we observe 6 buttons: "load start", "start", "stop", "raw" , "video" and "connect to robot".
+If you run start_robot.py and try to do something, the program will write "select robot" in red to you.
+This means that before you upload something, you need to understand where to upload it.
+In this case, you click on the "connect to robot" button and select your robot (you must first connect to the Wi-Fi of our robot).
+After that, it remains for us to load the necessary program on the raspberry ("load start" button) or, if it is loaded, restart it ("start" button).
+With the "video" button you can display the video from the robot's camera on the screen of your laptop in a separate window on the same window there will be telemetry displayed in the downloaded program.
+The "raw" button launches a test file that displays just video from the camera without telemetry.
+The "stop" button stops the running program and camera output.
 
 
 # Connecting to pyboard
