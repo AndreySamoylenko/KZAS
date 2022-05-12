@@ -20,6 +20,10 @@ In ![qualification](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/
 The PD controller first calculates the deviation (e=sr1-sr2) and then, based on it, calculates the control action (u = (e * kp + (e - e_old) * kd) (e_old is the previous deviation).
 the control action is sent with the first three digits of the message.
 
+In the ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py) there is everything the same as in the ![qualification](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/qualification.py), the functions for bypassing the cubes have been added.
+In the driving stage, a new huge sensor appears on the screen (although there are actually two) that reads the cubes and returns their color and position on the camera.
+And if the robot sees the cube, then it, ignoring the black lines, calculates a new deviation (e = (240 + hg * 1.3) -srg (hg is the position of the cube in y and srg is the position in x)).
+
 
 
 
