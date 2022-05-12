@@ -1,7 +1,7 @@
 # Program Explanations
 
-main.py is a helper program executable by pyboard that takes messages from the raspberry and converts them into a servo angle and motor speed.
-qualification.py final1.py final2.py these programs are uploaded to raspberry and have a similar structure.
+![main.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/main.py) is a helper program executable by pyboard that takes messages from the raspberry and converts them into a servo angle and motor speed.
+qualification.py ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py), ![final2.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final2.py) these programs are uploaded to raspberry and have a similar structure.
 All of them can be divided into 3 stages of work:
 
 1. button waiting
