@@ -73,3 +73,7 @@ perhaps you have encountered difficulties or the robot does not work, then it is
 it is possible (even most likely) that the IP did not suit you and the robot does not connect in such a situation, first connect to the Wi-Fi network of your raspberry.
 After that, open the properties of the network and find ah pi there.
 this ip must be thrown into ![RobotAPI.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/RobotAPI.py).
+
+If the robot does not work correctly, check the voltage on the voltmeter if it is below 7.5 volts, immediately change the batteries (it is recommended to change the batteries as soon as the voltage drops to 10.5).
+
+If the raspberry and the pyboard do not work at the same time, then there is no contact on the stabilizer.
