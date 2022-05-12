@@ -1,7 +1,7 @@
 # Program Explanations
 
 ![main.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/main.py) is a helper program executable by pyboard that takes messages from the raspberry and converts them into a servo angle and motor speed.
-qualification.py ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py), ![final2.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final2.py) these programs are uploaded to raspberry and have a similar structure.
+![qualification](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/qualification.py), ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py), ![final2.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final2.py) these programs are uploaded to raspberry and have a similar structure.
 All of them can be divided into 3 stages of work:
 
 1. button waiting
@@ -15,7 +15,7 @@ raspberry accepts this and moves on to the next stage.
 
 The stage of travel for all three programs is different.
 
-In qualification, the second stage is the passage with the help of a proportional-differential regulator with two sensors and with parallel reading of the so-called intersections (orange and blue lines).
+In ![qualification](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/qualification.py), the second stage is the passage with the help of a proportional-differential regulator with two sensors and with parallel reading of the so-called intersections (orange and blue lines).
 The PD controller first calculates the deviation (e=sr1-sr2) and then, based on it, calculates the control action (u = (e * kp + (e - e_old) * kd) (e_old is the previous deviation).
 the control action is sent with the first three digits of the message.
 
