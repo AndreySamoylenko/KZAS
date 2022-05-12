@@ -24,7 +24,8 @@ In the ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/
 In the driving stage, a new huge sensor appears on the screen (although there are actually two) that reads the cubes and returns their color and position on the camera.
 And if the robot sees the cube, then it, ignoring the black lines, calculates a new deviation (e = (240 + hg * 1.3) -srg (hg is the position of the cube in y and srg is the position in x)).
 
-
+![final2.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final2.py) is an improved version of ![final1.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/final1.py).
+Basically, useful features have been added to it that allow you to improve the result in the form of acceleration if there are no cubes and an improved perspective.
 
 
 
