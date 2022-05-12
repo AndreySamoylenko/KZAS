@@ -66,3 +66,10 @@ Once you have selected a program in ![start_robot.py](https://github.com/AndreyS
 But if you turned off and on the robot, then your program will not start.
 In this case, the program that is written in ![autostart.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/autostart.py) is launched.
 Therefore, you can write the desired program in ![autostart.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/autostart.py) and you will not need to restart the program through ![start_robot.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/start_robot.py).
+
+# If something goes wrong
+
+perhaps you have encountered difficulties or the robot does not work, then it is recommended to perform the following actions.
+it is possible (even most likely) that the IP did not suit you and the robot does not connect in such a situation, first connect to the Wi-Fi network of your raspberry.
+After that, open the properties of the network and find ah pi there.
+this ip must be thrown into ![RobotAPI.py](https://github.com/AndreySamoylenko/WRO_NanoGayka/blob/main/RobotAPI.py).
