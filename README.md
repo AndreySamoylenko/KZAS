@@ -7,6 +7,7 @@ All of them can be divided into 3 stages of work:
 1. button waiting
 2. travel
 3. finish
+
 (in the program, the stages are defined by the "state" variable)
 
 In the first step, the raspberry sends the message "$999999" which the pyboard reads and waits for the value to change while sending the button readings in parallel.
