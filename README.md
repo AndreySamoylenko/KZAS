@@ -15,6 +15,11 @@ raspberry accepts this and moves on to the next stage.
 
 The stage of travel for all three programs is different.
 
+In qualification, the second stage is the passage with the help of a proportional-differential regulator with two sensors and with parallel reading of the so-called intersections (orange and blue lines).
+The PD controller first calculates the deviation (e=sr1-sr2) and then, based on it, calculates the control action (u = (e * kp + (e - e_old) * kd) (e_old is the previous deviation).
+the control action is sent with the first three digits of the message.
+
+
 
 
 
