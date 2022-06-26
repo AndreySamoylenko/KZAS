@@ -26,41 +26,39 @@ fps = 0
 fps1 = 0
 fps_time = 0
 
-# [39, 70 ,84] [111, 255, 164] blue
+# [ 95 ,151 , 28] [135, 255 , 95] blue
 # [  4 ,104,  99] [ 17, 202 ,255] orange
-#[  0 ,105  , 0] [  7 ,255 ,255] red
+#[  0, 124 , 53] [ 11, 245, 243] red
 #[ 72, 121 , 48] [ 93 ,255 ,211]green
 #[ 64, 200 , 56] [ 81, 255 ,210]green :)
 
-lowb = np.array([50, 100, 0])
-upb = np.array([111, 255, 150])
+lowb = np.array([ 91 ,135,   6])
+upb = np.array([117, 255, 164])
 
-lowo = np.array([  0 ,60,  50])
-upo = np.array([ 30, 255 ,255])
+lowo = np.array([  3 , 79 ,113])
+upo = np.array([ 59 ,210, 189])
 
-lowr = np.array([  0 ,105  , 50])
-upr = np.array([  7 ,255 ,255])
+lowr = np.array([  0, 124 , 53])
+upr = np.array([ 6, 245, 243])
 
 lowg = np.array([ 64, 200 , 56])
 upg = np.array([ 81, 255 ,210])
 
 xl1, yl1 = 0, 200
 xr1, yr1 = 620, 200
-xp1, yp1 = 300, 450
-xk1, yk1 = 25, 200
+xp1, yp1 = 300, 400
+xk1, yk1 = 25,180
 
 hbl, wbl= 280, 20
 hbr,wbr=280,20
-hp, wp = 20, 40
-hk, wk = 240, 590
+hp, wp = 25, 40
+hk, wk = 220, 590
 
 xl2, yl2 = xl1 + wbl, yl1 + hbl
 xr2, yr2 = xr1 + wbr, yr1 + hbr
 xp2, yp2 = xp1 + wp, yp1 + hp
 xk2, yk2 = xk1 + wk, yk1 + hk
 
-r=0
-p=255
 
 sr1 = 0
 sr2 = 0
@@ -69,7 +67,7 @@ srr = 0
 
 
 delta=0
-speed = 50  #                                                 40
+speed = 60
 perek = 0
 color = None
 color_Final = ""
@@ -83,26 +81,34 @@ deg = 0
 u = 0
 e = 0
 
-v_col=0.15
-timer_sp=time.time()
+v_col=0.08
+
 timer_per = time.time()
 tf = time.time()
 t_colr=time.time()
 t_colg=time.time()
 t_b=time.time()
-vf=2.4
+timer_finish=time.time()
+vf=120//speed
 
 ii = ""
 flag_start = False
 flag_l=False
-danger_flag=False
+pyb_flag=False
+col_g=False
+flag_g=True
+col_r=False
+flag_r=True
+fff=False
 
 hg=0
 hr=0
 x1, y1, w1, h1 =0,0,0,0
 x2, y2, w2, h2 =0,0,0,0
 
-cub_list=["",""]
+list=[]
+per=0
+aaa=0
 
 def pd():
     global sr1, sr2, e, e_old, delta, deg,color
@@ -117,7 +123,7 @@ def pd():
     if -5 < e < 5:
         e = 0
 
-    kp = 0.5
+    kp = 0.3
     kd = 5
     u = int(e * kp + (e - e_old) * kd)
     deg =u
@@ -141,7 +147,7 @@ def pd():
             deg=45
 
 def perecryostok_lyboy():
-    global xp1, yp1, xp2, yp2, lowb, upb, lowo, upo, color, perek, timer_per, delta,flag_l
+    global xp1, yp1, xp2, yp2, lowb, upb, lowo, upo, color, perek, timer_per, delta,flag_l,list
     datp1 = frame[yp1:yp2, xp1:xp2]
     cv2.rectangle(datp1, (xp1, yp1), (xp2, yp2), (200, 100, 100), 3)
     if color == None or color == "blue":
@@ -152,13 +158,14 @@ def perecryostok_lyboy():
         for contorb1 in contoursb:
             x, y, w, h = cv2.boundingRect(contorb1)
             a1 = cv2.contourArea(contorb1)
-            if a1 > 50 and timer_per + 0.5 < time.time():
+            if a1 > 200 and timer_per +1 < time.time():
                 color = "blue"
-                LED(0,0,1)
+               # LED(0,0,1)
                 flag_l = True
 
                 cv2.rectangle(datp1, (x, y), (x + w, y + h), (255, 0, 0), 2)
                 perek += 1
+                list.append("per")
                 timer_per = time.time()
 
     if color == None or color == "orange":
@@ -169,11 +176,12 @@ def perecryostok_lyboy():
         for contoro in contourso:
             x, y, w, h = cv2.boundingRect(contoro)
             a1 = cv2.contourArea(contoro)
-            if a1 > 50 and timer_per + 0.5 < time.time():
+            if a1 > 200 and timer_per + 1 < time.time():
                 color = "orange"
-                LED(1,1,0)
+                # LED(1,1,0)
                 flag_l=True
                 perek += 1
+                list.append("per")
                 cv2.rectangle(datp1, (x, y), (x + w, y + h), (0, 100, 255), 2)
                 timer_per = time.time()
 
@@ -181,11 +189,12 @@ def perecryostok_lyboy():
     cv2.rectangle(frame, (xp1, yp1), (xp2, yp2), (0, 205, 0), 2)
 
 def cube_R():
-    global xk1, yk1, xk2, yk2, lowr, upr, color_Final, perek,  srr,speed,hr,t_colr,x1, y1, w1, h1,timer_sp
+    global xk1, yk1, xk2, yk2, lowr, upr, color_Final, perek,  srr,speed,hr,t_colr,x1, y1, w1, h1
     datk1 = frame[yk1:yk2, xk1:xk2]
 
     hsv1 = cv2.cvtColor(datk1, cv2.COLOR_BGR2HSV)
     maskd1 = cv2.inRange(hsv1, lowr, upr)
+    # maskd1= cv2.blur(maskd1,3)
     imd1, contoursk, hod1 = cv2.findContours(maskd1, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     max=0
@@ -195,16 +204,17 @@ def cube_R():
             x, y, w, h = cv2.boundingRect(contork1)
             a1 = cv2.contourArea(contork1)
             if a1 > 200:
-                t_colr = time.time()
+
                 if y+h>max:
+                    t_colr = time.time()
                     max=y+h
                     srr = x+w
                     hr = y + h
                     x1, y1, w1, h1 =  x, y, w, h
-                    timer_sp=time.time()
+
 
     else:
-        if t_colr+0.1< time.time():
+        if t_colr+v_col< time.time():
             srr = 0
             hr = 0
             x1, y1, w1, h1 = 0, 0, 0, 0
@@ -213,7 +223,7 @@ def cube_R():
     cv2.rectangle(frame, (xk1, yk1), (xk2, yk2), (0, 200,200), 2)
 
 def cube_G():
-    global xk1, yk1, xk2, yk2,  lowg, upg, perek, srg,speed,hg,t_colg,x2, y2, w2, h2,timer_sp,color,xl1,xr1,hbl,hbr
+    global xk1, yk1, xk2, yk2,  lowg, upg, perek, srg,speed,hg,t_colg,x2, y2, w2, h2,color,xl1,xr1,hbl,hbr
 
     datg1 = frame[yk1:yk2, xk1:xk2]
 
@@ -233,12 +243,11 @@ def cube_G():
                     srg = x
                     hg = y + h
                     x2, y2, w2, h2 = x, y, w, h
-                    timer_sp = time.time()
 
 
 
     else:
-        if t_colg + 0.1 < time.time():
+        if t_colg +v_col< time.time():
             srg = 0
             hg = 0
             x2, y2, w2, h2 = 0, 0, 0, 0
@@ -304,15 +313,16 @@ def LED(r,g,b):
         GPIO.output(B, GPIO.LOW)
 
 
-LED(0,0,0)
+# LED(0,0,0)
 
-LED(9,9,9)
+# LED(9,9,9)
+# LED(1,1,1)
 while 1:
 
 
     key = robot.get_key()
     if flag_l==True and timer_per+0.5<time.time() and state!=5:
-        LED(0,0,0)
+        # LED(0,0,0)
         flag_l=False
 
     if key != -1:
@@ -332,7 +342,7 @@ while 1:
     frame = robot.get_frame(wait_new_frame=1)
 
     if state == 0:
-
+        # LED(0, 1, 1)
         if flag_start == False:
             message = "999999$"
         else:
@@ -340,6 +350,7 @@ while 1:
 
         if ii == "1":
             state = 1
+            pyb_flag=True
             flag_start = True
 
 
@@ -372,13 +383,13 @@ while 1:
                 yl2 = yl1 + hbl
 
 
-            e =(240+hg*1.3)-srg
+            e =(200+hg*1.3)-srg
 
 
             if -5 < e < 5:
                 e = 0
-            kp = 0.3
-            kd = 3
+            kp =0.2
+            kd =2
             u = int(e * kp + (e - e_old) * kd)
             deg = 0 + u
             e_old = e
@@ -398,13 +409,13 @@ while 1:
                 yl1 = 240
                 hbl = 240
                 yl2 = yl1 + hbl
-            e = (350-hr*1.3)-srr
+            e = (270-hr*1.3)-srr
 
 
             if -5 < e < 5:
                 e = 0
-            kp = 0.3
-            kd = 3
+            kp = 0.2
+            kd = 2
             u = int(e * kp + (e - e_old) * kd)
             deg = 0 + u
             e_old = e
@@ -414,6 +425,31 @@ while 1:
             if deg < -90:
                 deg = -90
 
+            # if srg!=0 and hg>hr:
+            #     col_g = True
+            # else:
+            #     col_g = False
+            #
+            # if srr!=0 and hg<hr:
+            #     col_r = True
+            # else:
+            #     col_r = False
+            #
+            # if  col_g and flag_g:
+            #     flag_g = False
+            #     list.append("green")
+            # elif not col_g and not flag_g:
+            #     flag_g = True
+            #
+            # if  col_r and flag_r:
+            #     flag_r = False
+            #     list.append("red")
+            # elif not col_r and not flag_r:
+            #     flag_r = True
+            #
+            # for i in range(len(list)):
+            #     if list[i]=="per":
+            #         per+=1
 
 
 
@@ -429,15 +465,7 @@ while 1:
     if state == 2:  # stop
         pass
 
-    if state==3:
-        if key!=-1:
-            if key == 87:  # это W
-                r += 1
 
-            elif key == 83:  # это S
-                p -= 1
-        black_line_left()
-        print(r,p)
 
     if state == 4:  # finish
         if tf + vf> time.time():
@@ -469,10 +497,10 @@ while 1:
                     hbl = 240
                     yl2 = yl1 + hbl
 
-                e = (240 + hg * 1.3) - srg
+                e = (250 + hg * 1.3) - srg
                 if -5 < e < 5:
                     e = 0
-                kp = 0.3
+                kp = 0.2
                 kd = 3
                 u = int(e * kp + (e - e_old) * kd)
                 deg = 0 + u
@@ -493,10 +521,10 @@ while 1:
                     yl1 = 240
                     hbl = 240
                     yl2 = yl1 + hbl
-                e = (350 - hr * 1.3) - srr
+                e = (330 - hr * 1.3) - srr
                 if -5 < e < 5:
                     e = 0
-                kp = 0.3
+                kp = 0.2
                 kd = 3
                 u = int(e * kp + (e - e_old) * kd)
                 deg = 0 + u
@@ -511,7 +539,10 @@ while 1:
         else:
             deg = 0
             speed = 0
-            LED(1,1,1)
+            if not fff:
+                aaa=int(time.time()-timer_finish)
+                fff= True
+            # LED(1,1,1)
 
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
@@ -529,23 +560,23 @@ while 1:
         elif key == 68:  # это D
             deg -= 3
 
-        elif key == 82:  # это R
-            if GPIO.input(R):
-                LED(0 , 0 , 0)
-            else:
-                LED(1,0,0)
-
-        elif key == 71:  # это G
-            if GPIO.input(G):
-                LED(9, 0, 9)
-            else:
-                LED(9, 1, 9)
-
-        elif key == 66:  # это B
-            if GPIO.input(B):
-                LED(9, 9, 0)
-            else:
-                LED(9, 9, 1)
+        # elif key == 82:  # это R
+        #     if GPIO.input(R):
+        #         LED(0 , 0 , 0)
+        #     else:
+        #         LED(1,0,0)
+        #
+        # elif key == 71:  # это G
+        #     if GPIO.input(G):
+        #         LED(9, 0, 9)
+        #     else:
+        #         LED(9, 1, 9)
+        #
+        # elif key == 66:  # это B
+        #     if GPIO.input(B):
+        #         LED(9, 9, 0)
+        #     else:
+        #         LED(9, 9, 1)
 
         elif key == 32:
             speed = 0
@@ -568,8 +599,9 @@ while 1:
         fps1 = 0
 
     port.write(message.encode("utf-8"))
-    if port.in_waiting > 0:
+    if port.in_waiting > 0 and not pyb_flag:
         ii = ""
+
         t = time.time()
         while 1:
             try:
@@ -590,7 +622,23 @@ while 1:
     robot.text_to_frame(frame, 'sr1-sr2= ' + str(sr1)+'-' +str(sr2) + ' color = ' + str(color), 50, 80)
     robot.text_to_frame(frame,  'srr ,srg= ' + str(srr) + ' ,' + str(srg) + 'hr ,hg= ' + str(hr) + ' ,' + str(hg),50,100)
     robot.text_to_frame(frame, 'perekryostok ' + str(perek), 50, 120)
-
+    robot.text_to_frame(frame, 'time: ' + str(aaa), 50, 160)
+    if len(list)>0:
+        robot.text_to_frame(frame, 'list ' + str(list[0]),50,140)
+        if len(list)>1:
+            robot.text_to_frame(frame, 'list ' + str(list[0])+ str(list[1]), 50, 140)
+            if len(list) > 2:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2]), 50, 140)
+            if len(list) > 3:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2])+ str(list[3]), 50, 140)
+            if len(list) > 4:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2])+ str(list[3])+ str(list[4]), 50, 140)
+            if len(list) > 5:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2])+ str(list[3])+ str(list[4])+ str(list[5]), 50, 140)
+            if len(list) > 6:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2])+ str(list[3])+ str(list[4])+ str(list[5]) + str(list[6]), 50, 140)
+            if len(list)>7:
+                robot.text_to_frame(frame, 'list ' + str(list[0]) + str(list[1])+ str(list[2])+ str(list[3])+ str(list[4]) + str(list[5])+ str(list[6])+ str(list[7]) , 50, 140)
     robot.set_frame(frame, 40)
 
     # if key > -1:

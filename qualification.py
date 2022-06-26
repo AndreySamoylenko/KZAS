@@ -31,15 +31,22 @@ fps_time = 0
 #[39, 70 ,84] [111, 255, 164] blue
 #[ 0, 87,87] [ 66 ,186 ,166] orange
 
-lowb=np.array([50, 100 ,0])
-upb=np.array([111, 255, 150])
 
-lowo=np.array([  0 , 87 ,87])
-upo=np.array([ 66 ,186, 166])
+lowb = np.array([ 91 ,135,   6])
+upb = np.array([117, 255, 164])
+
+lowo = np.array([  3 , 79 ,113])
+upo = np.array([ 59 ,210, 189])
+
+lowr = np.array([ 0, 89, 47])
+upr = np.array([  6,223 ,165])
+
+lowg = np.array([ 64, 200 , 56])
+upg = np.array([ 81, 255 ,210])
 
 xl1, yl1 = 0, 200
 xr1, yr1 = 620, 200
-xp1, yp1 = 280, 440
+xp1, yp1 = 280, 400
 
 hb, wb =320, 20
 hp, wp =40,80
@@ -53,7 +60,7 @@ sr1 = 0
 sr2 = 0
 
 
-speed = 50
+speed = 70
 
 
 perek=0
@@ -88,8 +95,8 @@ def pd():
     if -5 < e < 5:
         e = 0
 
-    kp = 0.5
-    kd = 5
+    kp = 0.3
+    kd = 3
     u = int(e * kp + (e - e_old) * kd)
     deg = 0 + u
     e_old = e
@@ -117,7 +124,7 @@ def perecryostok_lyboy():
         for contorb1 in contoursb:
             x, y, w, h = cv2.boundingRect(contorb1)
             a1 = cv2.contourArea(contorb1)
-            if a1 > 500  and  t111 + 0.6 < time.time():
+            if a1 > 500  and  t111 + 0.9 < time.time():
                 color = "blue"
                 LED(0,0,1)
                 flag_l=True
@@ -269,6 +276,7 @@ while 1:
         else:
             deg=0
             speed=0
+            LED(1,1,1)
 
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
