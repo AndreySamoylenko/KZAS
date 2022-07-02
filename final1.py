@@ -7,7 +7,7 @@ import  RPi.GPIO as GPIO
 port = serial.Serial("/dev/ttyS0", baudrate=115200, stopbits=serial.STOPBITS_ONE)
 robot = rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
-
+i=0
 # LED
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -28,23 +28,23 @@ fps = 0
 fps1 = 0
 fps_time = 0
 
-# [ 95 ,151 , 28] [135, 255 , 95] blue
+# [77, 51, 27] [141, 255, 255] blue
 # [  4 ,104,  99] [ 17, 202 ,255] orange
-#[  0, 124 , 53] [ 11, 245, 243] red
-#[ 72, 121 , 48] [ 93 ,255 ,211]green     ниже идёт HSV
-#[ 64, 200 , 56] [ 81, 255 ,210]green :)
+#[0 ,0, 0] [  6, 255, 255] red
+#[ 58, 132,  71] [ 74, 255, 223]green     ниже идёт HSV
 
-lowb = np.array([ 91 ,135,   6])
-upb = np.array([117, 255, 164])
 
-lowo = np.array([  3 , 79 ,113])
+lowb = np.array([85 , 60, 27])
+upb = np.array([130, 255, 255])
+
+lowo = np.array([  3 , 50 ,70])
 upo = np.array([ 59 ,210, 189])
 
-lowr = np.array([  0, 124 , 53])
-upr = np.array([ 6, 245, 243])
+lowr = np.array([  0, 0 , 0])
+upr = np.array([ 6, 255, 255])
 
-lowg = np.array([ 48, 200 , 35])
-upg = np.array([ 84, 255 ,210])
+lowg = np.array([ 58, 132,  71])
+upg = np.array([ 74, 255, 223])
 
 lowr1 = np.array([164  , 0  , 0])
 upr1 = np.array([180 ,255 ,255])
@@ -86,7 +86,7 @@ srr = 0
 hg=0
 hr=0
 aa=0
-speed = 70
+speed = 80
 perek = 0
 color = None
 color_Final = ""
@@ -133,7 +133,7 @@ List=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 vrem_list=[0,0,0,0]
 abc=[]
 
-
+b=0
 
 
 def __(d1):                                                         # функция поиска чёрных объектов(бортиков)
@@ -211,7 +211,7 @@ def x_road():# функция поиска перекрёстков
         for contorb1 in contoursb:
             x, y, w, h = cv2.boundingRect(contorb1)
             a1 = cv2.contourArea(contorb1)
-            if a1 > 500  and  t111 + 0.9 < time.time():
+            if a1 > 500  and  t111 + 1.4 < time.time():
                 if perek<5:                             # подсчёт времени для каждого участка трассы между перекрёстками
                     vrem_list[perek%4]=round(time.time() - tim_per,2)
                     tim_per = time.time()
@@ -235,7 +235,7 @@ def x_road():# функция поиска перекрёстков
         for contoro in contourso:
             x, y, w, h = cv2.boundingRect(contoro)
             a1 = cv2.contourArea(contoro)
-            if a1 > 500 and  t111 + 0.6< time.time():
+            if a1 > 500 and  t111 + 1.3< time.time():
                 if perek < 5:
                     vrem_list[perek % 4] = round(time.time() - tim_per, 2)
                     tim_per = time.time()
@@ -532,7 +532,7 @@ while 1:
 
         if srg==0 and srr==0:# если нет кубиков
 
-            if t_b + 55/speed > time.time():            # после кубика поворот в направлении движения
+            if t_b + 0.3 > time.time():            # после кубика поворот в направлении движения
                 if color == "orange" and color_Final=="Green":
                     sr2 = 0
                 elif color_Final=="Red" and color=="blue":
@@ -550,11 +550,11 @@ while 1:
             LED(0,1,0)
             color_Final = "Green"
             t_b = time.time()
-            e =(210+hg*1.3)-srg # ошибка высчитывается исходя из перспективы
+            e =(205+hg*1.3)-srg # ошибка высчитывается исходя из перспективы
             if -5 < e < 5:
                 e = 0
             kp =0.2
-            kd =0.2
+            kd =0.5
             u = int(e * kp + (e - e_old) * kd)      # пропорционально-дифференциальный регулятор
             deg = 0 + u
             e_old = e
@@ -567,12 +567,12 @@ while 1:
             LED(1,0,0)
             color_Final = "Red"
             t_b=time.time()
-            e = (270-hr*1.3)-srr
+            e = (275-hr*1.3)-srr
 
             if -5 < e < 5:
                 e = 0
             kp = 0.2
-            kd = 0.2
+            kd = 0.5
             u = int(e * kp + (e - e_old) * kd)
             deg = 0 + u
             e_old = e
@@ -602,34 +602,34 @@ while 1:
     #     list,abc=process(list,vrem_list,List)
     #     state=1
 
-    # if state == 5:  # rulevoe
-    #
-    #     if key == 87:  # это W
-    #         speed += 3
-    #
-    #     elif key == 83:  # это S
-    #         speed -= 3
-    #
-    #     elif key == 65:  # это A
-    #         deg += 3
-    #
-    #     elif key == 68:  # это D
-    #         deg -= 3
-    #
-    #
-    #     elif key == 32:
-    #         speed = 0
-    #         deg = 0
-    #     if speed > 80:
-    #         speed = 80
-    #     if speed < -80:
-    #         speed = -80
-    #     if deg > 70:
-    #         deg = 60
-    #     if deg < - 70:
-    #         deg = -60
-    #
-    #     message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
+    if state == 5:  # rulevoe
+
+        if key == 87:  # это W
+            speed += 3
+
+        elif key == 83:  # это S
+            speed -= 3
+
+        elif key == 65:  # это A
+            deg += 3
+
+        elif key == 68:  # это D
+            deg -= 3
+
+
+        elif key == 32:
+            speed = 0
+            deg = 0
+        if speed > 80:
+            speed = 80
+        if speed < -80:
+            speed = -80
+        if deg > 70:
+            deg = 60
+        if deg < - 70:
+            deg = -60
+
+        message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
     fps1 += 1
     if time.time() > fps_time + 1:

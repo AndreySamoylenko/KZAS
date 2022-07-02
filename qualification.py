@@ -75,6 +75,7 @@ kd = 5
 deg=0
 u=0
 e=0
+vf=0
 
 state=0         # переменные состояния
 stope = 0
@@ -82,13 +83,14 @@ stope = 0
 t111=time.time()    # таймеры
 tf=time.time()
 ts=time.time()
+tim_per=time.time()
 
 ii = "" # для uart
 
 flag_start=False  # флаги
 flag_l=False
 
-vrem_list=[]    # список времени зон для функции x_road()
+vrem_list=[0,0,0,0]   # список времени зон для функции x_road()
 
 def __(d1):                                                         # функция поиска чёрных объектов(бортиков)
     dat1 = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)                                 # эти 4 строчки используются
@@ -314,7 +316,7 @@ while 1:
         message ='200200$'# отправляем 0 0
 
 
-        message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
+        message = str(int(0) + 200) + str(int(0) + 200) + '$'
 
 
     # if state==5:# ручное управление

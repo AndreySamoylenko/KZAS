@@ -7,12 +7,14 @@ import  RPi.GPIO as GPIO
 port = serial.Serial("/dev/ttyS0", baudrate=115200, stopbits=serial.STOPBITS_ONE)
 robot = rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
+i=0
+# LED
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 R=11
 B=15
 G=13
-timerCVET=time.time()
+
 GPIO.setup(R,GPIO.OUT)
 GPIO.setup(G,GPIO.OUT)
 GPIO.setup(B,GPIO.OUT)
@@ -26,66 +28,70 @@ fps = 0
 fps1 = 0
 fps_time = 0
 
-#[ 91 ,135,   6] [117, 255, 164] blue
-#[ 6, 78 ,86] [ 43, 218 ,235] orange
-#[  0 ,136,  76] [  7,234 ,240] red
-#[164  , 0  , 0] [180 ,255 ,255]
-#[ 72, 121 , 48] [ 93 ,255 ,211]green
-#[ 28, 176 , 74] [ 52, 255, 236] yellow
+# [ 95 ,151 , 28] [135, 255 , 95] blue
+# [  4 ,104,  99] [ 17, 202 ,255] orange
+#[0 ,0, 0] [  6, 255, 255] red
+#[ 58, 132,  71] [ 74, 255, 223]green     ниже идёт HSV
+
 
 lowb = np.array([ 91 ,135,   6])
 upb = np.array([117, 255, 164])
 
-lowo = np.array([ 8, 78 ,86])
-upo = np.array( [ 30, 218 ,235])
+lowo = np.array([  3 , 50 ,70])
+upo = np.array([ 59 ,210, 189])
 
-lowr = np.array([  0 ,106,  66])
-upr = np.array([  4,255,255])
+lowr = np.array([  0, 0 , 0])
+upr = np.array([ 6, 245, 243])
+
+lowg = np.array([ 58, 132,  71])
+upg = np.array([ 74, 255, 223])
 
 lowr1 = np.array([164  , 0  , 0])
 upr1 = np.array([180 ,255 ,255])
 
-lowg = np.array([ 64, 200 , 56])
-upg = np.array([ 81, 255 ,210])
-
-lowy= np.array([ 30, 176 , 74])
-upy=np.array([ 52, 255, 236])
-
-xl1, yl1 = 0, 200
-xr1, yr1 = 620, 200
-xp1, yp1 = 300, 400
-xk1, yk1 = 35,200
-
-hbl, wbl= 280, 20
-hbr,wbr=280,20
-hp, wp = 25, 40
-hk, wk = 180, 580
-
-
-xl2, yl2 = xl1 + wbl, yl1 + hbl
-xr2, yr2 = xr1 + wbr, yr1 + hbr
-xp2, yp2 = xp1 + wp, yp1 + hp
+# коодинаты для датчиков
+xk1, yk1 = 80,180
+hk, wk = 190, 480
 xk2, yk2 = xk1 + wk, yk1 + hk
 
+xp1, yp1 = 280, 400
+hp, wp =40,80
+xp2,yp2 = xp1+wp,yp1+hp
 
 
-sr1 = 0
+# d1 = frame[220:260, 0:100]
+# d2 = frame[260:300, 0:200]
+# d3 = frame[220:260, 540:640]
+# d4 = frame[260:300, 440:640]
+
+w11,h11  =80,30
+w12=250
+
+x11,y11=0,195
+x12,y12=0,y11+h11
+
+x13,y13=640-w11,y11
+x14,y14=640-w12,y12
+
+x21,y21=x11+w11,y11+h11
+x22,y22=x12+w12,y12+h11
+x23,y23=x13+w11,y13+h11
+x24,y24=x14+w12,y14+h11
+
+
+sr1 = 0# переменные для езды
 sr2 = 0
 srg = 0
 srr = 0
-sry=0
-
-
-delta=0
-speed = 70 #                                                 40
-speed_n = int(speed * 0.8)
+hg=0
+hr=0
+aa=0
+speed = 80
 perek = 0
 color = None
 color_Final = ""
-text=""
 e_old = 0
-dop_per=0
-
+stope=0
 state = 0
 func=None
 kp = 0.7
@@ -93,45 +99,39 @@ kd = 5
 deg = 0
 u = 0
 e = 0
-Bank=[]
 
-v_col=0.15
-timer_sp=time.time()
+# таймеры
 timer_per = time.time()
 tf = time.time()
+ts=time.time()
 t_colr=time.time()
 t_colg=time.time()
-t_coly=time.time()
+tim_per=time.time()
 t_b=time.time()
-ts=time.time()
-timer_z=time.time()
-vremf=0
-vf=1.9
+timer_finish=time.time()
+vf=1.7
+t111=time.time()
 
 ii = ""
+
+# флаги
 flag_start = False
 flag_l=False
+pyb_flag=False
 col_g=False
 flag_g=True
 col_r=False
 flag_r=True
-col_y=False
-flag_y=True
+flag_wr=True
+flag_wg=True
+fff=False
 
+
+# списки
 list=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 List=[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
 vrem_list=[0,0,0,0]
 abc=[]
-
-hg=0
-hr=0
-hy=0
-x1, y1, w1, h1 =0,0,0,0
-x2, y2, w2, h2 =0,0,0,0
-
-# for i in range(100):
-#     for j in range(2):
-#         list[i][j]=None
 
 
 
@@ -436,18 +436,63 @@ def cube_G():# функция поиска зеленых кубиков (за �
 
     cv2.rectangle(datg1, (x2, y2), (x2 + w2, y2 + h2), (0, 255, 0), 2)
 
+def process(list_c,list_v,list_C):# нерабочая функция для обработки списка кубиков
+    list_i=[]
+    list_n=[0,0,0,0]
+    list_vv=[]
+    list_col=[]
+    list_cl=[]
+    list_vc=[]
+    listvc=[]
+    for i in range(len(list_c)):
+        a = 0
+        l=list_c[i]
+        for j in l:
+            if j==0:
+                a+=1
+        list_n[i]=a
+    for i in range(len(list_n)):
+        if list_n[i]==2:
+            list_i.append(i)
+            list_vv.append(list_v[i])
+            list_vc.append(list_C[i])
+            list_cl.append(list_c[i])
+    for i in range(len(list_vc)):
+        l=list_vc[i]
+        for j in l:
+            if j!=0:
+                listvc.append(j)
+    for i in range(len(list_cl)):
+        l=list_cl[i]
+        for j in l:
+            if j!=0:
+                list_col.append(j)
+    list_aa=[]
+    for i in range(len(listvc)):
+        list_aa.append(round(list_vv[i]/listvc[i],1))
+    for  i in range(len(list_aa)):
+        if 0.6<list_aa[i]<1.5:
+            list_aa[i]=2
+        elif 1.6<list_aa[i]<2.5:
+            list_aa[i]=1
+        elif 2.6<list_aa[i]:
+            list_aa[i]=0
+    for i in range(len(list_c)):
+        for j in list_aa:
+            if list_n[i]==2:
+                list_c[i]=[0,0,0]
+                list_c[i][j]=list_col[j]
 
-LED(0,0,0)
-b=0
-stope = 0
-i=0
+
+
+
+    return list_c,list_aa
+
 while 1:
 
 
     key = robot.get_key()
-    if flag_l==True and timer_per+0.5<time.time() and state==1:
-        LED(0,0,0)
-        flag_l=False
+
 
     if key != -1:
         if key == 48:
@@ -471,7 +516,7 @@ while 1:
             miganie(0.2)
         else:
             message = "200200$"
-            LED(0,0,0)
+            LED(0, 0, 0)
 
         if ii == "1":
             state = 1
@@ -479,39 +524,37 @@ while 1:
             flag_start = True
 
 
-    if state == 1:  # езда
+    if state == 1:  # pd
 
-        message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
-
-        cube_Y()    # поиск кубов
+        black_line()
         cube_G()
         cube_R()
 
-        black_line()
+        if srg==0 and srr==0:# если нет кубиков
 
-        if srg==0 and srr==0 and sry==0:    # пропорционально-дифференциальный регулятор
-
-            if t_b + 55 / speed > time.time():  # после кубика поворот в направлении движения
-                if color == "orange" and color_Final == "Green":
+            if t_b + 0.3 > time.time():            # после кубика поворот в направлении движения
+                if color == "orange" and color_Final=="Green":
                     sr2 = 0
-                elif color_Final == "Red" and color == "blue":
+                elif color_Final=="Red" and color=="blue":
                     sr1 = 0
-                b = 1
-            elif b == 1:
+                b=1
+            elif b==1:
                 color_Final = "None"
-                LED(1, 1, 1)
-                b = 0
-            pd(sr1, sr2, 0.3, 3)
+                LED(1,1,1)
+                b=0
+            pd(sr1,sr2,0.3,3)
 
-        elif srg!=0 and hy<hg>hr: # если есть зелёный куб и он ближе
+
+
+        elif srg!=0 and hg>hr: # если есть зелёный куб и он ближе
             LED(0,1,0)
             color_Final = "Green"
             t_b = time.time()
-            e =(210+hg*1.3)-srg # ошибка высчитывается исходя из перспективы
+            e =(205+hg*1.3)-srg # ошибка высчитывается исходя из перспективы
             if -5 < e < 5:
                 e = 0
             kp =0.2
-            kd =0.2
+            kd =0.5
             u = int(e * kp + (e - e_old) * kd)      # пропорционально-дифференциальный регулятор
             deg = 0 + u
             e_old = e
@@ -520,16 +563,16 @@ while 1:
                 deg = 90
             if deg < -90:
                 deg = -90
-        elif hy<hr>hg and srr!=0: # если есть красный и он ближе
+        else : # если есть красный
             LED(1,0,0)
             color_Final = "Red"
             t_b=time.time()
-            e = (270-hr*1.3)-srr
+            e = (275-hr*1.3)-srr
 
             if -5 < e < 5:
                 e = 0
             kp = 0.2
-            kd = 0.2
+            kd = 0.5
             u = int(e * kp + (e - e_old) * kd)
             deg = 0 + u
             e_old = e
@@ -539,101 +582,28 @@ while 1:
             if deg < -90:
                 deg = -90
 
-        elif sry!=0 and hr<hy>hg: # тут добавлен поиск жёлтого куба
-            #if cub==0:
-            #    cub=1
-            #    dop_per=perek
-            if color=="orange":
-
-                LED(0, 0, 1)
-
-                t_b = time.time()
-                e = (270 - hr * 1.3) - srr
-
-                if -5 < e < 5:
-                    e = 0
-                kp = 0.2
-                kd = 0.2
-                u = int(e * kp + (e - e_old) * kd)
-                deg = 0 + u
-                e_old = e
-
-                if deg > 90:
-                    deg = 90
-                if deg < -90:
-                    deg = -90
-
-            else:
-                LED(1, 1, 0)
-
-                t_b = time.time()
-                e = (210 + hg * 1.3) - srg  # ошибка высчитывается исходя из перспективы
-                if -5 < e < 5:
-                    e = 0
-                kp = 0.2
-                kd = 0.2
-                u = int(e * kp + (e - e_old) * kd)  # пропорционально-дифференциальный регулятор
-                deg = 0 + u
-                e_old = e
-
-                if deg > 90:
-                    deg = 90
-                if deg < -90:
-                    deg = -90
-
-
-
-
         x_road()
-                    # + dop_per
-        if perek == 12 and stope == 0:  # переход в финиш
-            # state=3
-            # ts=time.time()
+
+        message = str(int(deg) + 200) + str(int(speed) + 200) + '$' # формирование сообщения
+
+        if perek == 12 and stope == 0:# финиш
             stope = 1
             tf = time.time()
 
-        if tf + vf < time.time() and stope == 1:    # финиш
+        if tf + vf < time.time() and stope == 1:
             state = 2
+        #if perek==8 :
+        #    state=3
 
-        if speed>100:   # ограничение по скорости
-            speed=90
-        if speed < 0:
-            speed = 0
+    if state==2:
+        message="200200$" # остановка
 
-
-
-
-
-
-    if state == 2:  # stop
-        message = str(int(0) + 200) + str(int(0) + 200) + '$'
-        # for i in range(len(list)):
-        #     text+=list[i]
-        #     text+=", "
-
-        # robot.text_to_frame(frame, 'list = ' + str(text), 3, 140)
-
-    if state==3:    # Разворот
-        if ts+0.3>time.time():
-            if color=="orange":
-                deg=-60
-            else:
-                deg=60
-            speed = 60
-        elif ts +1.2>time.time():
-            if color=="blue":
-                deg=-60
-            else:
-                deg=60
-            speed=60
-        else:
-            state=1
-        message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
-
-
+    # if state==3:
+    #     list,abc=process(list,vrem_list,List)
+    #     state=1
 
     # if state == 5:  # rulevoe
-    #     miganie(0.5)
+    #
     #     if key == 87:  # это W
     #         speed += 3
     #
@@ -645,7 +615,6 @@ while 1:
     #
     #     elif key == 68:  # это D
     #         deg -= 3
-    #
     #
     #
     #     elif key == 32:
@@ -662,15 +631,17 @@ while 1:
     #
     #     message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
 
-    fps1 += 1       # отсчёт FPS
+    fps1 += 1
     if time.time() > fps_time + 1:
         fps_time = time.time()
         fps = fps1
         fps1 = 0
 
     port.write(message.encode("utf-8")) # отправка сообщения
-    if port.in_waiting > 0:             # приём сообщения (кнопки)
+
+    if port.in_waiting > 0 and not pyb_flag:# ожидание и чтение сообщения
         ii = ""
+
         t = time.time()
         while 1:
             try:
@@ -684,26 +655,17 @@ while 1:
             except ValueError:
                 print("err")
 
-    robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 20)      # телеметрия
-    robot.text_to_frame(frame, 'state= ' + str(state), 3, 40)
-    robot.text_to_frame(frame, 'deg = ' + str(deg), 265, 475)
-    robot.text_to_frame(frame, 'speed = ' + str(speed), 250 , 455 )
-    robot.text_to_frame(frame, 'message = ' + str(message), 3, 60)
-    robot.text_to_frame(frame, 'sr1-sr2= ' + str(sr1)+'-' +str(sr2) + ' color = ' + str(color), 3, 80)
-    robot.text_to_frame(frame,  'srr , srg , sry = ' + str(srr) + ' , ' + str(srg) +  str(sry) + ' , '
-                        +'hr , ''hg, hy= ' + str(hr) + ' ,' + str(hg)+ ' ,' + str(hy),3,100)
-    robot.text_to_frame(frame, 'perekryostok ' + str(perek), 3, 120)
-    robot.text_to_frame(frame,"dop_per= "+str(dop_per),440,60,(200,255,250))
-
-    robot.text_to_frame(frame, 'vf= ' + str(vremf), 460, 20)
-
-
-
-
-
-
-
-
+    cv2.rectangle(frame,(0,0),(640,160),(0,0,0),-1) # телеметрия
+    robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 20,(255,255,255),1)
+    robot.text_to_frame(frame, 'state = ' + str(state), 120, 20,(255,255,255),1)
+    robot.text_to_frame(frame, 'message = ' + str(message), 250, 20,(255,255,255),1)
+    robot.text_to_frame(frame, 'sr1-sr2= ' + str(sr1)+'-' +str(sr2) + ' color = ' + str(color), 3, 40,(255,255,255),1)
+    robot.text_to_frame(frame,  'srr ,srg= ' + str(srr) + ' ,' + str(srg) + 'hr ,hg= ' + str(hr) + ' ,' + str(hg),3,60,(255,255,255),1)
+    robot.text_to_frame(frame, 'perekryostok ' + str(perek), 3, 80,(255,255,255),1)
+    robot.text_to_frame(frame, 'listt ' + str(abc), 220, 80, (255, 255, 255), 1)
+    robot.text_to_frame(frame, 'cub_list:  ' + str(list), 3, 100,(255,255,255),1)
+    robot.text_to_frame(frame, 'vrlist: ' + str(List), 3, 120,(255,255,255),1)
+    robot.text_to_frame(frame, 'time: ' + str(vrem_list), 3, 140,(255,255,255),1)
     robot.set_frame(frame, 40)
 
     # if key > -1:
