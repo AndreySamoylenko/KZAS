@@ -1,11 +1,9 @@
-# main.py -- put your code here!
-# main.py -- put your code here!
 from pyb import delay, Pin, ADC, Timer, UART
 import pyb                                  # импортируем внутреннюю библиотеку пайборда
 
 
                                             # задаём пины для работы
-uart = UART(6, 115200, stop=1)              # пин для UART
+uart = UART(2, 115200, stop=1)              # пин для UART
 inn = ''
 
 servo = pyb.Servo(1)                        # пин для сервопривода
@@ -16,14 +14,14 @@ GREEN=pyb.LED(2)                            # пины для встроенны
 YELLOW = pyb.LED(3)
 BLUE=pyb.LED(4)
 
-PIC= Pin('X7', Pin.OUT_PP)             # пишалка
-p_in = Pin('X8', Pin.IN, Pin.PULL_UP)  # кнопка
+
+p_in = Pin('X10', Pin.IN, Pin.PULL_UP)  # кнопка
 
 
-Ma = Pin('Y7', Pin.OUT_PP)
-Mb = Pin('Y8', Pin.OUT_PP)
-Sp = Pin('X9')
-tim = Timer(4, freq = 10000)
+Ma = Pin('Y10', Pin.OUT_PP)
+Mb = Pin('Y9', Pin.OUT_PP)
+Sp = Pin('X8')
+tim = Timer(14, freq = 10000)
 ch = tim.channel(1, Timer.PWM, pin = Sp)# пины для работы с драйвером
 
 
@@ -38,11 +36,16 @@ def motor(speed):  # функция упрощённого управления 
         Mb.low()
         Ma.high()
         ch.pulse_width_percent(-speed)
+def stop():
+    Mb.high()
+    Ma.high()
 
 message=""
 flag_start=True
 YELLOW.off()
 a=0
+
+
 while 1:
     if uart.any():          # обработка сообщений
         YELLOW.on()
@@ -58,20 +61,18 @@ while 1:
                 if inn == "999999":
                     flag_start = False
                     BLUE.on()
-                    PIC.high()
-                    delay(500)
-                    PIC.low()
             else:
-                message = str(1 - p_in.value()) + '$'   # отсылаем показания кнопки
+                message = str(p_in.value()) + '$'   # отсылаем показания кнопки
                 try:
                     if len(inn) == 6 and inn != '999999': # чтение сообщения и езда
                         rul = int(inn[:3]) - 200
+                        rul=-rul
                         speed = int(inn[3:]) - 200
                         print(speed, rul)
-                        if rul>70:
-                            rul=70
-                        if rul<-60:
-                            rul=-60
+                        if rul>40:
+                            rul=40
+                        if rul<-40:
+                            rul=-40
                         motor(speed)
                         servo.angle(rul)
 
@@ -80,6 +81,5 @@ while 1:
                 except ValueError:
                     print("err")
 
-            print(inn)# отправка кнопки
             inn = ""
-            uart.write(message)
+            uart.write(message)# отправка кнопки
