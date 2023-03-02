@@ -1,11 +1,11 @@
 import cv2
-import RobotAPI as rapi
+import RobotAPI as Rapi
 import numpy as np
 import serial
 import time
 
 port = serial.Serial("/dev/ttyS0", baudrate=115200, stopbits=serial.STOPBITS_ONE)
-robot = rapi.RobotAPI(flag_serial=False)
+robot = Rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
 
 fps = 0
@@ -43,28 +43,29 @@ y_line_dat = [220, 260, 260, 300, 220, 260, 260, 300]
 x_perek = [280, 360]
 y_perek = [310, 365]
 
-e_old = 0                           # различные переменные для ПД
+e_old = 0  # различные переменные для ПД
 speed = 3
 perek = 0
-color_per = None
+color_per = "none"
 kp = 0.5
 kd = 5
 deg = 0
 u = 0
 e = 0
 dat1, dat2 = 0, 0
+vrem_finish = 0
 
-state = 0                             # переменные состояния
+state = 0  # переменные состояния
 stope = 0
 
-x_road_tim = time.time()                    # таймеры
+x_road_tim = time.time()  # таймеры
 tim_per = time.time()
 finish_tim = time.time()
 
-flag_start = False                    # флаги
+flag_start = False  # флаги
 flag_l = False
 
-vrem_list = [0, 0, 0, 0]   # список времени зон для функции x_road()
+vrem_list = [0, 0, 0, 0]  # список времени зон для функции x_road()
 
 
 def wait_for_key():
@@ -101,7 +102,7 @@ def black_poisk_l(d1):
         if area > 500:
             if max1 < h * w:
                 max1 = h * w
-                dat = h * (w+x)
+                dat = h * (w + x)
                 xm, ym, wm, hm = x, y, w, h
 
     return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, dat]
@@ -123,7 +124,7 @@ def black_poisk_r(d1, w_dat):
         if area > 500:
             if max1 < h * w:
                 max1 = h * w
-                dat = h * (w_dat-x)
+                dat = h * (w_dat - x)
                 xm, ym, wm, hm = x, y, w, h
 
     return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, dat]
@@ -141,22 +142,45 @@ def bortik_pro():
     dat2 = (black_poisk_r(d3, 125)[4] + black_poisk_r(d4, 250)[4]) // 100
 
 
-def pd_regulator(dat1, dat2):              # пропорционально-дифференциальный регулятор
+def draw_rects_bortik():
+    l1 = black_poisk_l(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]])
+    l2 = black_poisk_l(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]])
+    l3 = black_poisk_r(frame[y_line_dat[4]:y_line_dat[5], x_line_dat[4]:x_line_dat[5]], 100)
+    l4 = black_poisk_r(frame[y_line_dat[6]:y_line_dat[7], x_line_dat[6]:x_line_dat[7]], 200)
+
+    cv2.rectangle(frame, (x_line_dat[0], y_line_dat[0]), (x_line_dat[1], y_line_dat[1]), (0, 25, 200), 2)
+    cv2.rectangle(frame, (x_line_dat[2], y_line_dat[2]), (x_line_dat[3], y_line_dat[3]), (0, 25, 200), 2)
+    cv2.rectangle(frame, (x_line_dat[4], y_line_dat[4]), (x_line_dat[5], y_line_dat[5]), (0, 25, 200), 2)
+    cv2.rectangle(frame, (x_line_dat[6], y_line_dat[6]), (x_line_dat[7], y_line_dat[7]), (0, 25, 200), 2)
+
+    cv2.rectangle(frame, (x_perek[0], y_perek[0]), (x_perek[1], y_perek[1]), (0, 205, 200), 2)
+
+    cv2.rectangle(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]], (l1[0], l1[1]), (l1[2], l1[3]),
+                  (10, 245, 0), 2)
+    cv2.rectangle(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]], (l2[0], l2[1]), (l2[2], l2[3]),
+                  (10, 245, 0), 2)
+    cv2.rectangle(frame[y_line_dat[4]:y_line_dat[5], x_line_dat[4]:x_line_dat[5]], (l3[0], l3[1]), (l3[2], l3[3]),
+                  (10, 245, 0), 2)
+    cv2.rectangle(frame[y_line_dat[6]:y_line_dat[7], x_line_dat[6]:x_line_dat[7]], (l4[0], l4[1]), (l4[2], l4[3]),
+                  (10, 245, 0), 2)
+
+
+def pd_regulator(d1, d2):  # пропорционально-дифференциальный регулятор
     global e, e_old, deg, color_per, u
 
-    e = dat2 - dat1
+    e = d2 - d1
     if -5 < e < 5:
         e = 0
     u = int(e * kp + (e - e_old) * kd)
     deg = u
-    e_old = e                       # до сюда обычный пропорционально-дифференциальный регулятор
+    e_old = e  # до сюда обычный пропорционально-дифференциальный регулятор
 
-    if dat1 == 0:
+    if d1 == 0:
         deg = 25
-    if dat2 == 0:
+    if d2 == 0:
         deg = -25
 
-    if dat1 == 0 and dat2 == 0:
+    if d1 == 0 and d2 == 0:
         if color_per == "orange":
             deg = -30
         elif color_per == "blue":
@@ -165,54 +189,51 @@ def pd_regulator(dat1, dat2):              # пропорционально-ди
     if deg > 90:
         deg = 90
     if deg < -90:
-        deg = -90                   # различные полезные фишки
+        deg = -90  # различные полезные фишки
 
 
-def x_road():                       # функция поиска перекрёстков
-    global x_perek, y_perek, lowblue, upblue, loworange, uporange, color_per, perek, x_road_tim, tim_per, vrem_finish, i, flag_l
+def x_road():  # функция поиска перекрёстков
+    global x_perek, y_perek, lowblue, upblue, loworange, uporange, color_per, perek, x_road_tim, tim_per, vrem_finish, \
+        flag_l
     dat = frame[y_perek[0]:y_perek[1], x_perek[0]:x_perek[1]]
-    if color_per==None or color_per=="blue":
+    if color_per == 'none' or color_per == "blue":
 
         hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, lowblue, upblue)    #
-        imd1, contours, hod1 = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)# поиск синего перекрёстка
-
+        mask = cv2.inRange(hsv, lowblue, upblue)  #
+        imd1, contours, hod1 = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # поиск синего перекрёстка
 
         for contor in contours:
             x, y, w, h = cv2.boundingRect(contor)
             a1 = cv2.contourArea(contor)
-            if a1 > 500  and  x_road_tim + 0.9 < time.time():
-                if perek<5:                             # подсчёт времени для каждого участка трассы между перекрёстками
-                    vrem_list[perek%4]=round(time.time() - tim_per,2)
+            if a1 > 500 and x_road_tim + 0.9 < time.time():
+                if perek < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
+                    vrem_list[perek % 4] = round(time.time() - tim_per, 2)
                     tim_per = time.time()
                 else:
-                    vrem_finish = vrem_list[0]* 0.6
+                    vrem_finish = vrem_list[0] * 0.6
                 color_per = "blue"
-                flag_l=True
-                cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)     # подсчёт перекрёстков
-                perek+=1
-                i=0
-                x_road_tim=time.time()
+                flag_l = True
+                cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)  # подсчёт перекрёстков
+                perek += 1
+                x_road_tim = time.time()
 
-
-    if color_per == None or color_per == "orange":
-        hsv2 = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)                # всё тоже самое только для оранжевого
+    if color_per == 'none' or color_per == "orange":
+        hsv2 = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)  # всё тоже самое только для оранжевого
         maskd2 = cv2.inRange(hsv2, loworange, uporange)  #
         imd1, contourso, hod1 = cv2.findContours(maskd2, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
         for contoro in contourso:
             x, y, w, h = cv2.boundingRect(contoro)
             a1 = cv2.contourArea(contoro)
-            if a1 > 500 and x_road_tim + 0.6< time.time():
+            if a1 > 500 and x_road_tim + 0.6 < time.time():
                 if perek < 5:
                     vrem_list[perek % 4] = round(time.time() - tim_per, 2)
                     tim_per = time.time()
                 else:
-                    vrem_finish=vrem_list[0]* 0.6
+                    vrem_finish = vrem_list[0] * 0.6
                 color_per = "orange"
                 perek += 1
-                i=0
-                flag_l=True
+                flag_l = True
 
                 x_road_tim = time.time()
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (0, 100, 255), 2)
@@ -223,29 +244,15 @@ wait_for_key()
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
     if state == 1:
-        l1 = black_poisk_l(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]])
-        l2 = black_poisk_l(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]])
-        l3 = black_poisk_r(frame[y_line_dat[4]:y_line_dat[5], x_line_dat[4]:x_line_dat[5]], 100)
-        l4 = black_poisk_r(frame[y_line_dat[6]:y_line_dat[7], x_line_dat[6]:x_line_dat[7]], 200)
-
-        cv2.rectangle(frame, (x_line_dat[0], y_line_dat[0]), (x_line_dat[1], y_line_dat[1]), (0, 25, 200), 2)
-        cv2.rectangle(frame, (x_line_dat[2], y_line_dat[2]), (x_line_dat[3], y_line_dat[3]), (0, 25, 200), 2)
-        cv2.rectangle(frame, (x_line_dat[4], y_line_dat[4]), (x_line_dat[5], y_line_dat[5]), (0, 25, 200), 2)
-        cv2.rectangle(frame, (x_line_dat[6], y_line_dat[6]), (x_line_dat[7], y_line_dat[7]), (0, 25, 200), 2)
-
-        cv2.rectangle(frame, (x_perek[0], y_perek[0]), (x_perek[1], y_perek[1]), (0, 205, 200), 2)
-
-        cv2.rectangle(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]], (l1[0], l1[1]), (l1[2], l1[3]), (10, 245, 0), 2)
-        cv2.rectangle(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]], (l2[0], l2[1]), (l2[2], l2[3]), (10, 245, 0), 2)
-        cv2.rectangle(frame[y_line_dat[4]:y_line_dat[5], x_line_dat[4]:x_line_dat[5]], (l3[0], l3[1]), (l3[2], l3[3]), (10, 245, 0), 2)
-        cv2.rectangle(frame[y_line_dat[6]:y_line_dat[7], x_line_dat[6]:x_line_dat[7]], (l4[0], l4[1]), (l4[2], l4[3]), (10, 245, 0), 2)
-
         bortik_pro()
-
         pd_regulator(dat1, dat2)
-
         x_road()
-    if perek == 12 and stope == 0:      # финиш
+
+    if state == 2:  # стоп
+        deg = 0
+        speed = 0
+
+    if perek == 12 and stope == 0:  # финиш
         stope = 1
         finish_tim = time.time()
 
@@ -257,6 +264,8 @@ while 1:
         fps_time = time.time()
         fps = fps1
         fps1 = 0
+
+    draw_rects_bortik()
 
     message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
     port.write(message.encode("utf-8"))

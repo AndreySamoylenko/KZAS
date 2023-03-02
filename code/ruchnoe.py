@@ -13,16 +13,16 @@ fps = 0
 fps1 = 0
 fps_time = 0
 
-state=5
-speed=0
-deg=0
-ii='0'
+state = 5
+speed = 0
+deg = 0
+ii = '0'
 
-i=0
-s=0
+i = 0
+s = 0
 
 message = str('999999$')
-while ii=='0':
+while ii == '0':
     port.write(message.encode("utf-8"))
     if port.in_waiting > 0:
         ii = ""
@@ -36,29 +36,25 @@ while ii=='0':
             if t + 0.02 < time.time():
                 break
 
-
-
-
-
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
     key = robot.get_key()
     if state == 5:  # rulevoe
-        if key==-1:
-            i+=1
-            if i>10 :
-                if speed>8:
-                    speed-=1
-                elif speed<-8:
-                    speed+=1
-                i=0
+        if key == -1:
+            i += 1
+            if i > 10:
+                if speed > 8:
+                    speed -= 1
+                elif speed < -8:
+                    speed += 1
+                i = 0
         elif key == 87:  # это W
             speed = 80
-            i=0
+            i = 0
 
         elif key == 83:  # это S
             speed = -50
-            i=0
+            i = 0
 
         elif key == 65:  # это A
             deg += 3
@@ -69,13 +65,13 @@ while 1:
         elif key == 32:
             speed = 0
             deg = 0
-        if speed > 80 and key==-1:
+        if speed > 80 and key == -1:
             speed = 80
-        if speed < -50 and key==-1:
+        if speed < -50 and key == -1:
             speed = -50
-        if deg > 40 and key==-1:
+        if deg > 40 and key == -1:
             deg = 40
-        if deg < - 40 and key==-1:
+        if deg < - 40 and key == -1:
             deg = -40
 
         message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
