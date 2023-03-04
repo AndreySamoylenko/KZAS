@@ -12,7 +12,7 @@ fps = 0
 fps1 = 0
 fps_time = 0
 message = ""
-
+# [5, 63, 78] [39, 173, 186] - ораньжевый hsv новый
 # ниже идёт различное HSV для поиска цветов
 # [ 91 ,135,   6] [117, 255, 164] blue
 # [ 0, 87,87] [ 66 ,186 ,166] orange
@@ -23,8 +23,8 @@ upblack = np.array([103, 256, 29])
 lowblue = np.array([94, 235, 140])
 upblue = np.array([101, 256, 244])
 
-loworange = np.array([3, 79, 113])
-uporange = np.array([59, 210, 189])
+loworange = np.array([5, 63, 78])
+uporange = np.array([39, 173, 186])
 
 lowr = np.array([0, 89, 47])
 upr = np.array([6, 223, 165])
@@ -37,25 +37,25 @@ upg = np.array([81, 255, 210])
 #     d3 = frame[220:260, 540:640]
 #     d4 = frame[260:300, 440:640]
 
-x_line_dat = [0, 100, 0, 200, 540, 640, 440, 640]
-y_line_dat = [220, 260, 260, 300, 220, 260, 260, 300]
+x_line_dat = [0, 100, 0, 200, 540, 640, 440, 640]  #
+y_line_dat = [230, 270, 270, 310, 230, 270, 270, 310]
 
 x_perek = [280, 360]
-y_perek = [310, 365]
+y_perek = [280, 325]
 
 e_old = 0  # различные переменные для ПД
-speed = 3
+speed = 30
 perek = 0
 color_per = "none"
-kp = 0.5
-kd = 5
+kp = 0.3
+kd = 3
 deg = 0
 u = 0
 e = 0
 dat1, dat2 = 0, 0
 vrem_finish = 0
 
-state = 0  # переменные состояния
+state = 1  # переменные состояния
 stope = 0
 
 x_road_tim = time.time()  # таймеры
@@ -69,7 +69,7 @@ vrem_list = [0, 0, 0, 0]  # список времени зон для функц
 
 
 def wait_for_key():
-    tx = '999999$'
+    tx = '999999999999999999999$'
     ii = '0'
     while ii == '0':
         port.write(tx.encode("utf-8"))
@@ -139,7 +139,7 @@ def bortik_pro():
     d4 = frame[y_line_dat[6]:y_line_dat[7], x_line_dat[6]:x_line_dat[7]]  # забираем часть экрана длядатчиков
 
     dat1 = (black_poisk_l(d1)[4] + black_poisk_l(d2)[4]) // 100  # высчитываем среднее исходя из показаний датчиков
-    dat2 = (black_poisk_r(d3, 125)[4] + black_poisk_r(d4, 250)[4]) // 100
+    dat2 = (black_poisk_r(d3, x_line_dat[1])[4] + black_poisk_r(d4, x_line_dat[3])[4]) // 100
 
 
 def draw_rects_bortik():
@@ -239,6 +239,12 @@ def x_road():  # функция поиска перекрёстков
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (0, 100, 255), 2)
 
 
+def print_message(sp, dg, r=0, g=0, b=0):
+    list = [str(sp+200), str(dg+200), str(r+200), str(g+200), str(b+200), '$']
+    strin = ",".join(list)
+    port.write(strin.encode("utf-8"))
+
+
 wait_for_key()
 
 while 1:
@@ -267,13 +273,13 @@ while 1:
 
     draw_rects_bortik()
 
-    message = str(int(deg) + 200) + str(int(speed) + 200) + '$'
+    print_message(speed,deg)
     port.write(message.encode("utf-8"))
 
     robot.text_to_frame(frame, 'fps = ' + str(fps), 50, 20)
     robot.text_to_frame(frame, dat1, 0, 140)
     robot.text_to_frame(frame, dat2, 600, 140)
     robot.text_to_frame(frame, deg, 300, 200)
-    robot.text_to_frame(frame, color_per, 275, 380)
+    robot.text_to_frame(frame, color_per, 275, 400)
     robot.text_to_frame(frame, perek, 335, 380)
     robot.set_frame(frame, 40)
