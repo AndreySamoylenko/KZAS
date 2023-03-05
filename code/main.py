@@ -110,9 +110,9 @@ while 1:
                             speed = 60
                         if speed < -60:
                             speed = -60
-                        RGB_LED(spisok[2],spisok[3],spisok[4])
+                        RGB_LED(spisok[2], spisok[3], spisok[4])
                         motor(speed)
-                        servo.angle(rul)
+                        servo.angle(rul + 4)  # rul-4 нужно для того, чтобы угол сервы совпадал с 0 переменной rul
                     else:
                         print(inn)
                 except ValueError:

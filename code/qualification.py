@@ -23,8 +23,8 @@ blu = 0
 lowblack = np.array([35, 67, 0])
 upblack = np.array([103, 256, 29])
 
-lowblue = np.array([81, 55, 50])
-upblue = np.array([113, 256, 253])
+lowblue = np.array([99, 68, 16])
+upblue = np.array([109, 197, 151])
 
 loworange = np.array([5, 63, 78])
 uporange = np.array([39, 173, 186])
@@ -41,13 +41,13 @@ upg = np.array([81, 255, 210])
 #     d4 = frame[260:300, 440:640]
 
 x_line_dat = [0, 120, 0, 200, 520, 640, 440, 640]  #
-y_line_dat = [210, 250, 250, 290, 210, 250, 250, 290]
+y_line_dat = [230, 270, 270, 310, 230, 270, 270, 310]
 
 x_perek = [280, 360]
 y_perek = [280, 325]
 
 e_old = 0  # различные переменные для ПД
-speed = 100
+speed = 60
 perek = 0
 color_per = "none"
 kp = 0.25
@@ -179,15 +179,15 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     e_old = e  # до сюда обычный пропорционально-дифференциальный регулятор
 
     if d1 == 0:
-        deg = 20
+        deg = 30
     if d2 == 0:
-        deg = -20
+        deg = -30
 
     if d1 == 0 and d2 == 0:
         if color_per == "orange":
-            deg = -30
+            deg = -32
         elif color_per == "blue":
-            deg = 30
+            deg = 32
 
     if deg > 90:
         deg = 90
