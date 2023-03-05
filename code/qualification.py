@@ -12,16 +12,19 @@ fps = 0
 fps1 = 0
 fps_time = 0
 message = ""
+red = 0
+gren = 0
+blu = 0
 # [5, 63, 78] [39, 173, 186] - ораньжевый hsv новый
 # ниже идёт различное HSV для поиска цветов
-# [ 91 ,135,   6] [117, 255, 164] blue
+# [81, 55, 50] [113, 256, 253] blue
 # [ 0, 87,87] [ 66 ,186 ,166] orange
 
 lowblack = np.array([35, 67, 0])
 upblack = np.array([103, 256, 29])
 
-lowblue = np.array([94, 235, 140])
-upblue = np.array([101, 256, 244])
+lowblue = np.array([81, 55, 50])
+upblue = np.array([113, 256, 253])
 
 loworange = np.array([5, 63, 78])
 uporange = np.array([39, 173, 186])
@@ -37,14 +40,14 @@ upg = np.array([81, 255, 210])
 #     d3 = frame[220:260, 540:640]
 #     d4 = frame[260:300, 440:640]
 
-x_line_dat = [0, 100, 0, 200, 540, 640, 440, 640]  #
-y_line_dat = [230, 270, 270, 310, 230, 270, 270, 310]
+x_line_dat = [0, 120, 0, 200, 520, 640, 440, 640]  #
+y_line_dat = [210, 250, 250, 290, 210, 250, 250, 290]
 
 x_perek = [280, 360]
 y_perek = [280, 325]
 
 e_old = 0  # различные переменные для ПД
-speed = 30
+speed = 40
 perek = 0
 color_per = "none"
 kp = 0.3
@@ -176,9 +179,9 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     e_old = e  # до сюда обычный пропорционально-дифференциальный регулятор
 
     if d1 == 0:
-        deg = 25
+        deg = 20
     if d2 == 0:
-        deg = -25
+        deg = -20
 
     if d1 == 0 and d2 == 0:
         if color_per == "orange":
@@ -240,8 +243,8 @@ def x_road():  # функция поиска перекрёстков
 
 
 def print_message(sp, dg, r=0, g=0, b=0):
-    list = [str(sp+200), str(dg+200), str(r+200), str(g+200), str(b+200), '$']
-    strin = ",".join(list)
+    lst = [str(sp + 200), str(dg + 200), str(r + 200), str(g + 200), str(b + 200), '$']
+    strin = ",".join(lst)
     port.write(strin.encode("utf-8"))
 
 
@@ -250,9 +253,17 @@ wait_for_key()
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
     if state == 1:
+        red, gren, blu = 0, 0, 0
         bortik_pro()
         pd_regulator(dat1, dat2)
         x_road()
+        if x_road_tim + 0.5 > time.time():
+            if color_per == 'orange':
+                red = 70
+                gren = 45
+            if color_per == 'blue':
+                blu = 80
+                gren = 20
 
     if state == 2:  # стоп
         deg = 0
@@ -273,7 +284,7 @@ while 1:
 
     draw_rects_bortik()
 
-    print_message(speed,deg)
+    print_message(speed, deg, red, gren, blu)
     port.write(message.encode("utf-8"))
 
     robot.text_to_frame(frame, 'fps = ' + str(fps), 50, 20)

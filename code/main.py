@@ -111,7 +111,7 @@ while 1:
                         if speed < -60:
                             speed = -60
                         RGB_LED(spisok[2],spisok[3],spisok[4])
-                        motor(0)
+                        motor(speed)
                         servo.angle(rul)
                     else:
                         print(inn)
