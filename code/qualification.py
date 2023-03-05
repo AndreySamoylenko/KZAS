@@ -47,11 +47,11 @@ x_perek = [280, 360]
 y_perek = [280, 325]
 
 e_old = 0  # различные переменные для ПД
-speed = 40
+speed = 100
 perek = 0
 color_per = "none"
-kp = 0.3
-kd = 3
+kp = 0.25
+kd = 5
 deg = 0
 u = 0
 e = 0
@@ -172,7 +172,7 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     global e, e_old, deg, color_per, u
 
     e = d2 - d1
-    if -5 < e < 5:
+    if -10 < e < 10:
         e = 0
     u = int(e * kp + (e - e_old) * kd)
     deg = u
@@ -213,7 +213,7 @@ def x_road():  # функция поиска перекрёстков
                     vrem_list[perek % 4] = round(time.time() - tim_per, 2)
                     tim_per = time.time()
                 else:
-                    vrem_finish = vrem_list[0] * 0.6
+                    vrem_finish = vrem_list[0] * 0.7
                 color_per = "blue"
                 flag_l = True
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)  # подсчёт перекрёстков
@@ -228,7 +228,7 @@ def x_road():  # функция поиска перекрёстков
         for contoro in contourso:
             x, y, w, h = cv2.boundingRect(contoro)
             a1 = cv2.contourArea(contoro)
-            if a1 > 500 and x_road_tim + 0.6 < time.time():
+            if a1 > 500 and x_road_tim + 0.7 < time.time():
                 if perek < 5:
                     vrem_list[perek % 4] = round(time.time() - tim_per, 2)
                     tim_per = time.time()
@@ -291,6 +291,5 @@ while 1:
     robot.text_to_frame(frame, dat1, 0, 140)
     robot.text_to_frame(frame, dat2, 600, 140)
     robot.text_to_frame(frame, deg, 300, 200)
-    robot.text_to_frame(frame, color_per, 275, 400)
-    robot.text_to_frame(frame, perek, 335, 380)
+    robot.text_to_frame(frame, color_per + " " + str(perek), 265, 400)
     robot.set_frame(frame, 40)
