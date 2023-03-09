@@ -106,10 +106,6 @@ while 1:
                             rul = 40
                         if rul < -40:
                             rul = -40
-                        if speed > 60:
-                            speed = 60
-                        if speed < -60:
-                            speed = -60
                         RGB_LED(spisok[2], spisok[3], spisok[4])
                         motor(speed)
                         servo.angle(rul + 4)  # rul-4 нужно для того, чтобы угол сервы совпадал с 0 переменной rul
