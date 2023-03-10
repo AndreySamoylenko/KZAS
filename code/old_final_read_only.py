@@ -540,8 +540,6 @@ while 1:
                 b = 0
             pd(sr1, sr2, 0.3, 3)
 
-
-
         elif srg != 0 and hg > hr:  # если есть зелёный куб и он ближе
             LED(0, 1, 0)
             color_Final = "Green"
