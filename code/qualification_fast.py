@@ -87,7 +87,7 @@ def wait_for_key():
                     break
 
 
-def black_search_left(d1, area_min=500):
+def black_search_left(d1):
     xm, ym, wm, hm = 0, 0, 0, 0
     dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)
     hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
@@ -100,7 +100,7 @@ def black_search_left(d1, area_min=500):
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         area = cv2.contourArea(contour)
-        if area > area_min:
+        if area > 500:
             if max1 < h * w:
                 max1 = h * w
                 dat = (w + x)
@@ -263,7 +263,7 @@ while 1:
         # если с момента поднятия флага прошло время необходимое для проезда в центр зоны
         state = 2  # переходим в состояние "стоп"
 
-    fps1 += 1
+    fps1 += 1                       # подсчёт фэпэсов
     if time.time() > fps_time + 1:
         fps_time = time.time()
         fps = fps1
