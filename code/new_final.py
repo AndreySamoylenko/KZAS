@@ -55,7 +55,7 @@ l1, l2 = [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]
 
 cross = 0  # счётчик перекрёсков
 color_line = "none"  # цвет перекрёстка (оранжевый или синий) используется для определения направления движения
-color_Final = 'none'
+cube_color = 'none'
 
 cub_pos = 0
 
@@ -67,10 +67,9 @@ stop = False
 search_cross_time = time.time()  # таймеры
 cross_time = time.time()
 finish_tim = time.time()
-x_road_tim = time.time()
-tim_per = time.time()
+# x_road_tim = time.time()
 cube_red_exist = time.time()
-cube_g_exist = time.time()
+cube_green_exist = time.time()
 cube_exist_tim = time.time()
 
 flag_start = False  # флаги
@@ -83,10 +82,10 @@ time_list = [0, 0, 0, 0]  # список времени зон получаем�
 
 message = ""  # сообщение формируемое функцией print_message()
 
-speed = 60  # скорость
-degree = 0  # угол поворота сервомоторчика
+speed = 0  # скорость
+degree = 0  # угол поворота сервопривода
 
-vrem_list = [0, 0, 0, 0]  # список времени зон для функции x_road()
+vrem_list = [0, 0, 0, 0]  # список времени зон для функции search_cross()
 cub_col_list = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]  # список кубов по зонам
 # указывается цвет ввиде цифры (переделать) ^
 time_cub_list = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]  # список кубов по расположению в зоне (расчет по времени)
@@ -155,7 +154,7 @@ def black_search_right(d1, w_dat):
 
 
 def detect_line_pro():
-    global x_line_dat, y_line_dat, dat1, dat2
+    global x_line_dat, y_line_dat, dat1, dat2, l1, l2
     # забираем часть экрана для датчиков
 
     l1 = black_search_left(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]])
@@ -166,7 +165,7 @@ def detect_line_pro():
 
 
 def draw_contour_line():
-    global l1, l2
+    # global l1, l2
 
     cv2.rectangle(frame, (x_line_dat[0], y_line_dat[0]), (x_line_dat[1], y_line_dat[1]), (0, 25, 200), 2)
     cv2.rectangle(frame, (x_line_dat[2], y_line_dat[2]), (x_line_dat[3], y_line_dat[3]), (0, 25, 200), 2)
@@ -262,7 +261,7 @@ def print_message(sp, dg, r=0, g=0, b=0):
 
 
 # def cube_y():  # функция поиска жёлтых кубиков
-#     global color_Final, cross, sry, hy, t_coly, timer_sp, cube, flag, timerCVET, dop_per, cub
+#     global cube_color, cross, sry, hy, t_coly, timer_sp, cube, flag, timerCVET, dop_per, cub
 #     datk1 = frame[yk1:yk2, xk1:xk2]
 #     xm, ym, wm, hm = 0, 0, 0, 0
 #     hsv1 = cv2.cvtColor(datk1, cv2.COLOR_BGR2HSV)
@@ -298,10 +297,9 @@ def print_message(sp, dg, r=0, g=0, b=0):
 #     cv2.rectangle(datk1, (x1, y1), (x1 + w1, y1 + h1), (0, 255, 255), 2)
 
 
-def cube_r():  # функция поиска красных кубиков
-    global color_Final, cross, red_pos_x, cub_pos, red_pos_y, cube_red_exist, timer_sp, cube, flag, timerCVET, flag_wr, \
-        tim_per
-    datk1 = frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]]
+def cube_r(datk1):  # функция поиска красных кубиков
+    global cube_color, cross, red_pos_x, cub_pos, red_pos_y, cube_red_exist, timer_sp, cube, flag, timerCVET, flag_wr, \
+        cross_time
 
     hsv = cv2.cvtColor(datk1, cv2.COLOR_BGR2HSV)
     # gblur = cv2.GaussianBlur(hsv, (5, 5), cv2.BORDER_DEFAULT)
@@ -324,7 +322,7 @@ def cube_r():  # функция поиска красных кубиков
                 if y + h > 115 and flag_wr and cross < 5:  # запись кубиков в список
                     cub_col_list[cross % 4][cub_pos] = 5
                     flag_wr = False
-                    time_cub_list[cross % 4][cub_pos] = round(time.time() - tim_per, 1)
+                    time_cub_list[cross % 4][cub_pos] = round(time.time() - cross_time, 1)
                     cub_pos = 2
                 if y + h < 95 and not flag_wr:
                     flag_wr = True
@@ -350,10 +348,9 @@ def cube_r():  # функция поиска красных кубиков
     return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1]
 
 
-def cube_g():  # функция поиска зеленых кубиков (за подробностями в cube_R())
-    global green_pos_x, green_pos_y, cube_g_exist, timer_sp, color_per, timerCvet, flag_wg, cub_pos
+def cube_g(datg1):  # функция поиска зеленых кубиков (за подробностями в cube_R())
+    global green_pos_x, green_pos_y, cube_green_exist, timer_sp, color_per, timerCvet, flag_wg, cub_pos
 
-    datg1 = frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]]
     hsv1 = cv2.cvtColor(datg1, cv2.COLOR_BGR2HSV)
     maskg1 = cv2.inRange(hsv1, lowgreen, upgreen)
     imd1, contoursk, hod1 = cv2.findContours(maskg1, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -367,11 +364,11 @@ def cube_g():  # функция поиска зеленых кубиков (за
             x, y, w, h = cv2.boundingRect(contork1)
             a1 = cv2.contourArea(contork1)
             if a1 > 300:
-                cube_g_exist = time.time()
+                cube_green_exist = time.time()
                 if y + h > 115 and flag_wg and cross < 5:
                     cub_col_list[cross % 4][cub_pos] = 3
                     flag_wg = False
-                    time_cub_list[cross % 4][cub_pos] = round(time.time() - tim_per, 1)
+                    time_cub_list[cross % 4][cub_pos] = round(time.time() - cross_time, 1)
                     cub_pos = 2
                 if y + h < 115 and not flag_wg:
                     flag_wg = True
@@ -383,12 +380,12 @@ def cube_g():  # функция поиска зеленых кубиков (за
                     xm, ym, wm, hm = x, y, w, h
                     timer_sp = time.time()
             else:
-                if cube_g_exist + 0.07 < time.time():
+                if cube_green_exist + 0.07 < time.time():
                     green_pos_x = 0
                     green_pos_y = 0
                     xm, ym, wm, hm = 0, 0, 0, 0
     else:
-        if cube_g_exist + 0.05 < time.time():
+        if cube_green_exist + 0.05 < time.time():
             green_pos_x = 0
             green_pos_y = 0
             xm, ym, wm, hm = 0, 0, 0, 0
@@ -417,42 +414,41 @@ def state_changer():
 
 wait_for_key()
 
+green_pos = None
+red_pos = None
 while 1:
     # state_changer()
     frame = robot.get_frame(wait_new_frame=1)
 
     if state == 1:  # езда
-        green_pos_x = cube_g()[0]
-        green_pos_y = cube_g()[3]
-        red_pos_x = cube_r()[2]
-        red_pos_y = cube_r()[3]
-
-        # green_pos_x = 0
-        # green_pos_y = 0
-        # red_pos_x = 0
-        # red_pos_y = 0
+        green_pos = cube_g(frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]])
+        red_pos = cube_r(frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]])
+        green_pos_x = green_pos[0]+1
+        green_pos_y = green_pos[3]
+        red_pos_x = red_pos[2]+1
+        red_pos_y = red_pos[3]
 
         if green_pos_x == 0 and red_pos_x == 0:  # если нет кубиков
             detect_line_pro()  # ищем бортики
             if cube_exist_tim + 0.3 > time.time():  # после кубика поворот в направлении движения
-                if color_line == "orange" and color_Final == "Green":
+                if color_line == "orange" and cube_color == "Green":
                     dat2 = 0
-                elif color_Final == "Red" and color_line == "blue":
+                elif cube_color == "Red" and color_line == "blue":
                     dat1 = 0
                 flag_cube_exist = True
             elif flag_cube_exist:
-                color_Final = "none"
+                cube_color = "none"
                 flag_cube_exist = False
             pd_regulator(dat1, dat2)
 
         elif green_pos_x != 0 and green_pos_y > red_pos_y:  # если есть зелёный куб и он ближе
-            color_Final = "Green"
+            cube_color = "Green"
             cube_exist_tim = time.time()
             # e = (205 + green_pos_y * 1.3) - green_pos_x  # ошибка высчитывается исходя из перспективы
             pd_regulator((205 + green_pos_y * 1.3), green_pos_x)
 
         else:  # если есть красный
-            color_Final = "Red"
+            cube_color = "Red"
             cube_exist_tim = time.time()
             # e = (275 - red_pos_y * 1.3) - red_pos_x      # ошибка высчитывается исходя из перспективы
             pd_regulator((275 - red_pos_y * 1.3), red_pos_x)
@@ -482,7 +478,10 @@ while 1:
     print_message(speed, degree, red, green, blue)
     port.write(message.encode("utf-8"))  # отправка сообщения
 
-    robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 20, (255, 255, 255), 1)  # телеметрия
+    robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 20, (255, 255, 255), 1)  # телеметрия\
+    cv2.rectangle(frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]], (red_pos[0], red_pos[1]), (red_pos[2], red_pos[3]),
+                  (50, 50, 250), -1)
+    cv2.rectangle(frame[y_cube[0]:y_cube[1], x_cube[0]:x_cube[1]], (green_pos[0], green_pos[1]), (green_pos[2], green_pos[3]), (50, 250, 50), -1)
     # cv2.rectangle(frame, (0, 330), (640, 480), (0, 0, 0), -1)
     # robot.text_to_frame(frame, 'state = ' + str(state), 3, 470, (255, 255, 255), 1)
     # robot.text_to_frame(frame, 'message = ' + str(message), 250, 20, (255, 255, 255), 1)
