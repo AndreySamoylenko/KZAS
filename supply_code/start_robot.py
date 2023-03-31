@@ -2376,8 +2376,7 @@ dropVar.set("Connect to robot")
 dropVar_inet = tk.StringVar()
 dropVar_inet.set("Connect to robot")
 
-list_combobox.append(["8", "192.168.4.1", "robot1", "l"])
-list_combobox.append(["8", "192.168.10.1", "robot2", "l"])
+list_combobox.append(["8", "192.168.10.1", "robot_kzas", "l"])
 
 list_combobox.append(["scan_inet", " "])
 list_combobox_inet.append(["scan_inet", " "])
