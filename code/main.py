@@ -7,8 +7,7 @@ inn = ''
 
 servo = pyb.Servo(1)  # пин для сервопривода
 servo.angle(0)  # поворот сервы в 0 градусов
-
-RED = pyb.LED(1)
+уц-кгшщзRED = pyb.LED(1)
 GREEN = pyb.LED(2)  # пины для встроенных светодиодов пайборда
 YELLOW = pyb.LED(3)
 BLUE = pyb.LED(4)
@@ -20,9 +19,10 @@ Mb = Pin('Y9', Pin.OUT_PP)
 Sp = Pin('X8')
 tim = Timer(14, freq=10000)
 ch = tim.channel(1, Timer.PWM, pin=Sp)  # пины для работы с драйвером
+
 Spr = Pin('Y8')
 tim = Timer(1, freq=2000)
-r = tim.channel(3, Timer.PWM, pin=Spr)
+r = tim.channel(3, Timer.PWM, pin=Spr)  # пины для RGB светодиода
 Spg = Pin('Y6')
 tim = Timer(1, freq=2000)
 g = tim.channel(1, Timer.PWM, pin=Spg)
@@ -31,22 +31,24 @@ tim = Timer(1, freq=2000)
 b = tim.channel(2, Timer.PWM, pin=Spb)
 
 
-def RGB_LED(red, gren, blu):
-    r.pulse_width_percent(red)
+def RGB_LED(red, gren, blu):  # функция для удобной работы с RGB светодиодом
+    r.pulse_width_percent(red)   
     g.pulse_width_percent(gren)
     b.pulse_width_percent(blu)
 
 
 def motor(sped):  # функция упрощённого управления мотором
     global Ma, Mb, ch
-    if sped > 0:
-        Ma.low()
-        Mb.high()
-        ch.pulse_width_percent(sped)
-    else:
-        Mb.low()
+    if sped > 0: # если скорость больше нуля -> едем вперёд
+        Ma.low()  # задаём направление движения        
+        Mb.high() 
+        ch.pulse_width_percent(sped)  # с помощью ШИМ управляем скоростью 
+    elif sped < 0:    # иначесли скорость меньше нуля -> едем назад
+        Mb.low()  # аналогично задаём направление движения, но в обратную сторону
         Ma.high()
-        ch.pulse_width_percent(-sped)
+        ch.pulse_width_percent(-sped)  # т.к. ШИМ не может принимать отрицательные значения, даём значение -sped
+    else:  # иначе -> стоп
+        stop()
 
 
 def stop():
