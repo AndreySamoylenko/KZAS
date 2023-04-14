@@ -30,11 +30,11 @@ uporange = np.array([39, 173, 186])
 lowred = np.array([0, 89, 47])
 upred = np.array([6, 223, 165])
 
-lowgreen = np.array([64, 200, 56])
-upgeen = np.array([81, 255, 210])
+lowgreen = np.array([70, 225, 58])
+upgeen = np.array([83, 256, 250])
 
 x_line_dat = [0, 220, 420, 640]  # координаты для датчиков линии
-y_line_dat = [210, 270, 210, 270]
+y_line_dat = [230, 260, 230, 260]
 
 x_cross = [280, 360]  # координаты для датчика перекрёстка (оранжевой или синей линии)
 y_cross = [280, 325]
@@ -52,11 +52,13 @@ color_line = "none"  # цвет перекрёстка (оранжевый ил�
 time_finish = 0  # время для финишной зоны засечённое с помощью функции search_cross()
 
 state = 1  # переменные состояния
-stop = False
+stop_flag = False
+stop = 0
 
 search_cross_time = time.time()  # таймеры
 cross_time = time.time()
 finish_tim = time.time()
+stop_timer = time.time()
 
 flag_start = False  # флаги
 flag_l = False
@@ -65,7 +67,7 @@ time_list = [0, 0, 0, 0]  # список времени зон получаем�
 
 message = ""  # сообщение формируемое функцией print_message()
 
-speed = 90   # скорость
+speed = 100  # скорость
 degree = 0  # угол поворота сервомоторчика
 
 
@@ -91,10 +93,10 @@ def black_search_left(d1):
     xm, ym, wm, hm = 0, 0, 0, 0
     dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)
     hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
-    blur = cv2.blur(hsv, (5, 5))
-    mask = cv2.inRange(blur, lowblack, upblack)  #
+    mask = cv2.inRange(hsv, lowblack, upblack)  #
+    blur = cv2.blur(mask, (5, 5))
 
-    imd1, contours, hod1 = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
+    imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
     max1 = 0
     dat = 0
     for contour in contours:
@@ -113,10 +115,10 @@ def black_search_right(d1, w_dat):
     xm, ym, wm, hm = 0, 0, 0, 0
     dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)
     hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
-    blur = cv2.blur(hsv, (5, 5))
-    mask = cv2.inRange(blur, lowblack, upblack)  #
+    mask = cv2.inRange(hsv, lowblack, upblack)  #
+    blur = cv2.blur(mask, (5, 5))
 
-    im, contours, ho = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
+    imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
     max1 = 0
     dat = 0
     for contour in contours:
@@ -169,15 +171,15 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     e_old = e  # до сюда обычный пропорционально-дифференциальный регулятор
 
     if d1 == 0:
-        degree = 31
+        degree = 40
     if d2 == 0:
-        degree = -36
+        degree = -40
 
     if d1 == 0 and d2 == 0:
         if color_line == "orange":
-            degree = -30
+            degree = -40
         elif color_line == "blue":
-            degree = 30
+            degree = 40
 
 
 def search_cross():  # функция поиска перекрёстков
@@ -193,12 +195,12 @@ def search_cross():  # функция поиска перекрёстков
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
             a1 = cv2.contourArea(contour)
-            if a1 > 500 and search_cross_time + 0.9 < time.time():
+            if a1 > 500 and search_cross_time + 0.6 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
                 else:
-                    time_finish = time_list[0] * 0.7
+                    time_finish = time_list[0] * 0.6
                 color_line = "blue"
                 flag_l = True
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)  # подсчёт перекрёстков
@@ -213,12 +215,12 @@ def search_cross():  # функция поиска перекрёстков
         for contour1 in contours1:
             x, y, w, h = cv2.boundingRect(contour1)
             a1 = cv2.contourArea(contour1)
-            if a1 > 500 and search_cross_time + 0.9 < time.time():
+            if a1 > 500 and search_cross_time + 0.6 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
                 else:
-                    time_finish = time_list[0] * 0.7
+                    time_finish = time_list[0] * 0.6
                 color_line = "orange"
                 cross += 1
                 flag_l = True
@@ -252,18 +254,27 @@ while 1:
                 green = 20
 
     if state == 2:  # stop
+        if stop_timer + 0.1 > time.time():
+            speed = -100
+        else:
+            state = 3
+
+    if state == 3:
         degree = 0
         speed = 0
 
-    if cross == 12 and not stop:  # если проехали 12 перекрёстков и флаг опущен
-        stop = True  # поднимаем флаг
-        finish_tim = time.time() # засекаем время
+    if cross == 12 and not stop_flag:  # если проехали 12 перекрёстков и флаг опущен
+        stop_flag = True  # поднимаем флаг
+        finish_tim = time.time()  # засекаем время
+        cross = 13
 
-    if finish_tim + time_finish < time.time() and stop == 1:
+    if finish_tim + time_finish < time.time() and stop_flag:
         # если с момента поднятия флага прошло время необходимое для проезда в центр зоны
         state = 2  # переходим в состояние "стоп"
+        stop_timer = time.time()
+        stop_flag = False
 
-    fps1 += 1                       # подсчёт фэпэсов
+    fps1 += 1  # подсчёт фэпэсов
     if time.time() > fps_time + 1:
         fps_time = time.time()
         fps = fps1
@@ -277,6 +288,7 @@ while 1:
     port.write(message.encode("utf-8"))
 
     robot.text_to_frame(frame, 'fps = ' + str(fps), 50, 20)
+    robot.text_to_frame(frame, 'state = ' + str(state), 400, 20)
     robot.text_to_frame(frame, dat1, 0, 140)
     robot.text_to_frame(frame, dat2, 600, 140)
     robot.text_to_frame(frame, degree, 300, 200)
