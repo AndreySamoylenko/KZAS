@@ -18,8 +18,8 @@ blue = 0
 
 #  HSV для поиска цветов
 
-lowblack = np.array([38, 87, 2])
-upblack = np.array([77, 256, 29])
+lowblack = np.array([59, 111, 8])
+upblack = np.array([116, 256, 67])
 
 lowblue = np.array([86, 142, 26])
 upblue = np.array([116, 256, 256])
@@ -39,13 +39,13 @@ upgreen = np.array([81, 256, 216])
 # координаты для отрисовки всех датчиков
 
 x_line_dat = [0, 220, 420, 640]  # координаты для датчиков линии
-y_line_dat = [230, 260, 230, 260]
+y_line_dat = [240, 270, 240, 270]
 
 x_cross = [280, 360]  # координаты для датчика перекрёстка (оранжевой или синей линии)
 y_cross = [310, 340]
 
 x_cube = [60, 580]  # координаты для датчика кубиков (знаков)
-y_cube = [120, 280]
+y_cube = [130, 290]
 
 # различные переменные для ПД
 
@@ -94,7 +94,7 @@ flag_sort = True
 
 message = ""  # сообщение формируемое функцией print_message()
 
-speed = 45  # скорость
+speed = 35  # скорость
 degree = 0  # угол поворота сервопривода
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
@@ -597,6 +597,7 @@ while 1:
 
     cv2.rectangle(frame, (0, 340), (640, 480), (0, 0, 0), -1)
     cv2.rectangle(frame, (0, 0), (640, 120), (0, 0, 0), -1)
+    cv2.drawline(frame, (x_cube[0],170+y_cube[0]))
     robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 470, (255, 255, 255), 1)  # телеметрия
     robot.text_to_frame(frame, color_line + " " + str(cross), 265, 400, (255, 255, 255), 1)
     robot.text_to_frame(frame, 'degree:' + str(degree), 250, 360, (255, 255, 255), 1)
