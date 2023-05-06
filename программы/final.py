@@ -18,67 +18,63 @@ blue = 0
 
 #  HSV для поиска цветов
 
-lowblack = np.array([59, 111, 8])
-upblack = np.array([116, 256, 67])
+lowblack = np.array([42, 95, 0])  # черный
+upblack = np.array([71, 256, 43])
 
-lowblue = np.array([86, 142, 26])
-upblue = np.array([116, 256, 256])
+lowblue = np.array([84, 80, 34])  # синий
+upblue = np.array([146, 256, 242])
 
-loworange = np.array([6, 63, 78])
+loworange = np.array([5, 63, 78])  # оранжевый
 uporange = np.array([39, 173, 186])
 
-lowred = np.array([0, 120, 70])
-upred = np.array([7, 225, 125])
+lowred = np.array([0, 89, 47])  # красный
+upred = np.array([6, 223, 165])
 
-lowred1 = np.array([176, 128, 47])
-upred1 = np.array([180, 210, 256])
+lowgreen = np.array([64, 200, 56])  # зелёный
+upgreen = np.array([81, 255, 210])
 
-lowgreen = np.array([36, 114, 60])
-upgreen = np.array([81, 256, 216])
-
-# координаты для отрисовки всех датчиков
+# координаты областей интереса
 
 x_line_dat = [0, 220, 420, 640]  # координаты для датчиков линии
 y_line_dat = [240, 270, 240, 270]
 
 x_cross = [280, 360]  # координаты для датчика перекрёстка (оранжевой или синей линии)
-y_cross = [310, 340]
+y_cross = [320, 360]
 
-x_cube = [60, 580]  # координаты для датчика кубиков (знаков)
-y_cube = [130, 290]
+x_cube = [120, 520]  # координаты для датчика кубиков (знаков)
+y_cube = [180, 320]
 
 # различные переменные для ПД
-
+e_old = 0  # значение предыдущей ошибки для подсчёта дифференциальной составляющей
+e_old_cube = 0
+kp = 0.2  # коэффициент пропорциональной составляющей
+kd = 0.2  # коэффициент дифференциальной составляющей
 u = 0  # управляющее воздействие
 e = 0  # ошибка (отклонение)
-e_old = 0
 dat1, dat2 = 0, 0  # показания датчиков линии
-kpnc = 0.25
-kdnc = 1
-
-l1, l2 = [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]  # списки для отрисовки контуров черной линии
+kpnc = 0.25  # коэффициент пропорциональной составляющей для объезда знаков
+kdnc = 1  # коэффициент дифференциальной составляющей для объезда знаков
 
 cross = 0  # счётчик перекрёсков
 color_line = 'none'  # цвет перекрёстка (оранжевый или синий) используется для определения направления движения
-cube_color = 'none'
+cube_color = 'none'  # цвет текущего знака
 
-cub_pos = 0
-red_pos_x = 0
-red_pos_y = 0
-green_pos_x = 0
-green_pos_y = 0
-b_g = 0
-b_r = 0
+cub_pos = 0  # индекс для списка знаков
+red_pos_x = 0  # позиция красного знака по х
+red_pos_y = 0  # позиция красного знака по у
+green_pos_x = 0  # позиция зелёного знака по х
+green_pos_y = 0  # позиция зелёного знака по у
+b_g = 0  # коэффициент для подсчёта отклонения от траектроии подъезда к зелёному знаку
+b_r = 0  # коэффициент для подсчёта отклонения от траектроии подъезда к красному знаку
 
 time_finish = 0  # время для финишной зоны засечённое с помощью функции search_cross()
 
-state = 1  # переменные состояния
+state = 1  # переменная состояния
 stop_flag = False
 
 search_cross_time = time.time()  # таймеры
 cross_time = time.time()
 finish_tim = time.time()
-# x_road_tim = time.time()
 cube_red_exist = time.time()
 cube_green_exist = time.time()
 cube_exist_tim = time.time()
@@ -94,7 +90,7 @@ flag_sort = True
 
 message = ""  # сообщение формируемое функцией print_message()
 
-speed = 35  # скорость
+speed = 40  # скорость
 degree = 0  # угол поворота сервопривода
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
@@ -104,131 +100,137 @@ time_cub_list = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]  # список к�
 
 
 def wait_for_key():
-    tx = '999999999999999999999$'
-    ii = '0'
-    while ii == '0':
-        port.write(tx.encode("utf-8"))
-        if port.in_waiting > 0:
-            ii = ""
-            t = time.time()
-            while 1:
-                a = str(port.read(), "utf-8")
-                if a != '$':
-                    ii += a
-                else:
-                    break
-                if t + 0.02 < time.time():
-                    break
+    tx = '999999999999999999999$'  # сообщение об ожидании кнопки
+    ii = '0'  # сообщение с микроконтроллера
+    while ii == '0':  # пока сообщение равно "0"
+        port.write(tx.encode("utf-8"))  # отправить сообщение об ожидании кнопки
+        if port.in_waiting > 0:  # если что-то пришло
+            ii = ""  # очищаем сообщение
+            t = time.time()  # засекаем время
+            while 1:  # всегда
+                a = str(port.read(), "utf-8")  # получаем символ из сообщения
+                if a != '$':  # если символ не стоп-символ
+                    ii += a  # прибавить символ к сообщению
+                else:  # иначе(пришёл стоп-символ)
+                    break  # прекращаем читать сообщение
+                if t + 0.02 < time.time():  # если вышел таймаут
+                    break  # прекращаем читать сообщение
 
 
 def black_search_left(d1):
     xm, ym, wm, hm = 0, 0, 0, 0
-    dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)
-    hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
-    blur = cv2.blur(hsv, (5, 5))
-    mask = cv2.inRange(blur, lowblack, upblack)  #
+    dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)  # размытие фрагмента изображения
+    hsv = cv2.cvtColor(dat, cv2.COLOR_BGR2HSV)  # перевод в цветовую модель HSV
+    mask = cv2.inRange(hsv, lowblack, upblack)  # создание маски
+    blur = cv2.blur(mask, (5, 5))  # размытие маски
 
-    imd1, contours, hod1 = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
-    max1 = 0
+    imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # функция поиска контуров
+
     dat = 0
     for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        area = cv2.contourArea(contour)
-        if area > 400:
-            if max1 < h * w:
-                max1 = h * w
-                dat = (w + x)
-                xm, ym, wm, hm = x, y, w, h
+        x, y, w, h = cv2.boundingRect(contour)  # координаты текущего контура
+        area = cv2.contourArea(contour)  # площадь текущего контура
+        if area > 250:  # фильтр по минимальной площади контура
+            if dat < w + x:  # поиск максимального по площади контура
+                dat = (w + x)  # перезапись показаний датчиков
+                xm, ym, wm, hm = x, y, w, h  # запись координат наибольшего контура
 
-    return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, dat]
+    return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, int(dat / 220 * 100)]
 
 
 def black_search_right(d1, w_dat):
     xm, ym, wm, hm = 0, 0, 0, 0
-    dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)
-    hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(hsv, lowblack, upblack)  #
-    blur = cv2.blur(mask, (5, 5))
+    dat = cv2.GaussianBlur(d1, (5, 5), cv2.BORDER_DEFAULT)  # размытие фрагмента изображения
+    hsv = cv2.cvtColor(dat.copy(), cv2.COLOR_BGR2HSV)  # перевод в цветовую модель HSV
+    mask = cv2.inRange(hsv, lowblack, upblack)  # создание маски
+    blur = cv2.blur(mask, (5, 5))  # размытие маски
 
-    im, contours, ho = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  #
-    max1 = 0
+    imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # функция поиска контуров
     dat = 0
     for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        area = cv2.contourArea(contour)
-        if area > 400:
-            if max1 < h * w:
-                max1 = h * w
-                dat = (w_dat - x)
-                xm, ym, wm, hm = x, y, w, h
+        x, y, w, h = cv2.boundingRect(contour)  # координаты текущего контура
+        area = cv2.contourArea(contour)  # площадь текущего контура
+        if area > 250:  # фильтр по минимальной площади контура
+            if dat < w_dat - x:  # поиск максимального по площади контура
+                dat = (w_dat - x)  # перезапись показаний датчиков
+                xm, ym, wm, hm = x, y, w, h  # запись координат наибольшего контура
 
-    return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, dat]
+    return [xm + 1, ym + 1, xm + wm - 1, ym + hm - 1, int(dat / 220 * 100)]
 
 
 def detect_line_pro():
-    global x_line_dat, y_line_dat, dat1, dat2, l1, l2
-    # забираем часть экрана для датчиков
+    global x_line_dat, y_line_dat, dat1, dat2
 
+    # забираем часть экрана для датчиков
+    d1 = frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]]
+    d2 = frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]]
+
+    # высчитываем показания датчиков
+    dat1 = (black_search_left(d1)[4])
+    dat2 = (black_search_right(d2, x_line_dat[1])[4])
+
+
+def draw_contour_line():  # функция для отображения датчиков и контуров
+    # получаем координаты контуров
     l1 = black_search_left(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]])
     l2 = black_search_right(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]], 200)
-    # высчитываем среднее исходя из показаний датчиков
-    dat1 = (l1[4])
-    dat2 = (l2[4])
-
-
-def draw_contour_line():
+    # отрисовываем границы датчиков
     cv2.rectangle(frame, (x_line_dat[0], y_line_dat[0]), (x_line_dat[1], y_line_dat[1]), (0, 25, 200), 2)
     cv2.rectangle(frame, (x_line_dat[2], y_line_dat[2]), (x_line_dat[3], y_line_dat[3]), (0, 25, 200), 2)
-
     cv2.rectangle(frame, (x_cross[0], y_cross[0]), (x_cross[1], y_cross[1]), (0, 205, 200), 2)
-
+    # отрисовываем прямоугольники вокруг контуров
     cv2.rectangle(frame[y_line_dat[0]:y_line_dat[1], x_line_dat[0]:x_line_dat[1]], (l1[0], l1[1]), (l1[2], l1[3]),
                   (10, 245, 0), 2)
     cv2.rectangle(frame[y_line_dat[2]:y_line_dat[3], x_line_dat[2]:x_line_dat[3]], (l2[0], l2[1]), (l2[2], l2[3]),
                   (10, 245, 0), 2)
+    # отрисовка датчика знаков
+    cv2.rectangle(frame, (x_cube[0], y_cube[0]), (x_cube[1], y_cube[1]), (60, 26, 28), 2)
 
-    cv2.rectangle(frame, (x_cube[0] + 20, y_cube[0]), (x_cube[1] + 20, y_cube[1]), (0, 50, 20), 2)
-    cv2.rectangle(frame, (x_cube[0] - 20, y_cube[0]), (x_cube[1] - 20, y_cube[1]), (0, 20, 50), 2)
+
+def pd_regulator_cube(d1, d2, k_p=0.2, k_d=0.2):  # пропорционально-дифференциальный регулятор
+    global e_old_cube, degree, color_line, u
+
+    e = d2 - d1  # вычисяем отклонение
+    if -10 < e < 10:  # если отклонение небольшое
+        e = 0  # приравниваем к нулю
+    u = int(e * k_p + (e - e_old_cube) * k_d)  # вычисляем управляющее воздействие по формуле ПД регулятора
+    degree = u  # приравниваем угол к управляющему воздействию
+    e_old_cube = e  # запоминаем предыдущую ошибку
+
+    robot.text_to_frame(frame, e, 0, 40, (255, 255, 255), 1)
 
 
-def pd_regulator(d1, d2, kp=0.25, kd=1):  # пропорционально-дифференциальный регулятор
-    global e, e_old, degree, color_line, u, cube_exist_tim
+def pd_regulator(d1, d2, k_p=0.2, k_d=0.2):  # пропорционально-дифференциальный регулятор
+    global e, e_old, degree, color_line, u
 
-    e = d2 - d1
-    if -5 < e < 5:
-        e = 0
-    u = int(e * kp + (e - e_old) * kd)
-    degree = u
-    e_old = e  # до сюда обычный пропорционально-дифференциальный регулятор
+    e = d2 - d1  # вычисяем отклонение
+    if -5 < e < 5:  # если отклонение небольшое
+        e = 0  # приравниваем к нулю
+    u = int(e * k_p + (e - e_old) * k_d)  # вычисляем управляющее воздействие по формуле ПД регулятора
+    degree = u  # приравниваем угол к управляющему воздействию
+    e_old = e  # запоминаем предыдущую ошибку
 
-    if d1 == 0:
-        if cube_exist_tim + 0.3 > time.time():
-            degree = 30
-        else:
-            degree = 60
-
+    if d1 == 0:  # если нет бортика поворачиваем в сторону где он должен быть
+        degree = 35
     if d2 == 0:
-        if cube_exist_tim + 0.3 > time.time():
-            degree = -38
-        else:
-            degree = -60
+        degree = -35
 
-    if d1 == 0 and d2 == 0:
+    if d1 == 0 and d2 == 0:  # если нет обоих бортиков поворачиваем в направлении движения
         if color_line == "orange":
-            if cube_exist_tim + 0.25 > time.time():
-                degree = -40
-            else:
-                degree = -60
+            degree = -50
         elif color_line == "blue":
-            if cube_exist_tim + 0.25 > time.time():
-                degree = 35
-            else:
-                degree = 60
+            degree = 50
+
+    if d1 > 180 and d2 > 180:  # если оба датчика показывают больше 180
+        if color_line == "orange":  # значит мы едем в бортик и надо срочно выруливать в направлении движения
+            degree = -60
+        elif color_line == "blue":
+            degree = 60
 
 
 def search_cross():  # функция поиска перекрёстков
     global x_cross, y_cross, lowblue, upblue, loworange, uporange, color_line, cross, search_cross_time, cross_time, \
-        flag_l, time_finish
+        time_finish
     dat = frame[y_cross[0]:y_cross[1], x_cross[0]:x_cross[1]]
     if color_line == 'none' or color_line == "blue":
 
@@ -238,15 +240,14 @@ def search_cross():  # функция поиска перекрёстков
 
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            area = cv2.contourArea(contour)
-            if area > 200 and search_cross_time + 0.9 < time.time():
+            a1 = cv2.contourArea(contour)
+            if a1 > 500 and search_cross_time + 0.9 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
                 else:
-                    time_finish = time_list[0] * 0.7
+                    time_finish = time_list[0] * 0.6
                 color_line = "blue"
-                flag_l = True
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)  # подсчёт перекрёстков
                 cross += 1
                 search_cross_time = time.time()
@@ -259,24 +260,23 @@ def search_cross():  # функция поиска перекрёстков
         for contour1 in contours1:
             x, y, w, h = cv2.boundingRect(contour1)
             a1 = cv2.contourArea(contour1)
-            if a1 > 200 and search_cross_time + 0.9 < time.time():
+            if a1 > 500 and search_cross_time + 0.9 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
                 else:
-                    time_finish = time_list[0] * 0.7
+                    time_finish = time_list[0] * 0.6
                 color_line = "orange"
                 cross += 1
-                flag_l = True
 
                 search_cross_time = time.time()
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (0, 100, 255), 2)
 
 
 def print_message(sp, dg, r=0, g=0, b=0):
-    lst = [str(sp + 200), str(dg + 200), str(r + 200), str(g + 200), str(b + 200), '$']
-    string = ",".join(lst)
-    port.write(string.encode("utf-8"))
+    lst = [str(sp + 200), str(dg + 200), str(r + 200), str(g + 200), str(b + 200), '$']  # формируем сообщение
+    string = ",".join(lst)  # переводим сообщение в строку
+    port.write(string.encode("utf-8"))  # отправляем сообщение
 
 
 # def cube_y():  # функция поиска жёлтых кубиков
@@ -322,16 +322,16 @@ def cube_r():  # функция поиска красных кубиков
     datk1 = frame[y_cube[0]:y_cube[1], x_cube[0] + 20:x_cube[1] + 20]
     hsv = cv2.cvtColor(datk1, cv2.COLOR_BGR2HSV)
     # gblur = cv2.GaussianBlur(hsv, (5, 5), cv2.BORDER_DEFAULT)
-    mask1 = cv2.inRange(hsv, lowred, upred)
-    mask2 = cv2.inRange(hsv, lowred1, upred1)  # поиск по HSV
-    mask = cv2.bitwise_or(mask1, mask2)
+    mask = cv2.inRange(hsv, lowred, upred)
+    # mask2 = cv2.inRange(hsv, lowred1, upred1)  # поиск по HSV
+    # mask = cv2.bitwise_or(mask, mask2)
     blur = cv2.blur(mask, (5, 5))
     imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     xm, ym, wm, hm = 0, 0, 0, 0
-    max = 0
 
     if len(contours) != 0:
+        max = 0
         for contor in contours:
             x, y, w, h = cv2.boundingRect(contor)
             area = cv2.contourArea(contor)
@@ -476,10 +476,16 @@ green_pos = None
 red_pos = None
 
 while 1:
-    # state_changer()
     frame = robot.get_frame(wait_new_frame=1)
 
     if state == 1:  # езда
+        if search_cross_time + 0.5 > time.time():  # если с момента засечения перекрёстка прошло менее 0.5 секунд
+            if color_line == 'orange':  # если цвет перекрёстка оранжевый зажечь оранжевый
+                red = 80
+                green = 50
+            if color_line == 'blue':  # если цвет перекрёстка синий зажечь синий
+                blue = 80
+                green = 20
         green_pos = cube_g()
         red_pos = cube_r()
         green_pos_x = green_pos[0] - 1
@@ -489,42 +495,42 @@ while 1:
 
         if green_pos_x == 0 and red_pos_x == 0:  # если нет кубиков
             detect_line_pro()  # ищем бортики
-            kpnc = 0.25
-            if 0.2 < time.time() - cube_exist_tim < 0.6:  # после кубика поворот в направлении движения
-                kpnc = 0.15
-                if cube_color == "Green":
-                    if color_line == 'orange':
-                        degree = -45
-                    if color_line == 'blue':
-                        if dat1 > 80:
-                            degree = 50
-                        else:
-                            degree = 30
-
-                elif cube_color == "Red":
-                    if color_line == 'blue':
-                        degree = 45
-                    if color_line == 'orange':
-                        if dat2 > 80:
-                            degree = -50
-                        else:
-                            degree = -30
-                flag_cube_exist = True
-            elif flag_cube_exist:
-                cube_color = "none"
-                flag_cube_exist = False
-            pd_regulator(dat1, dat2, kpnc, kdnc)
-            if dat1 > 160 and dat2 > 160:
-                if color_line == "orange":
-                    if cube_exist_tim + 0.25 > time.time():
-                        degree = -60
-                    else:
-                        degree = -40
-                elif color_line == "blue":
-                    if cube_exist_tim + 0.25 > time.time():
-                        degree = 60
-                    else:
-                        degree = 40
+            # kpnc = 0.25
+            # if 0.2 < time.time() - cube_exist_tim < 0.6:  # после кубика поворот в направлении движения
+            #     kpnc = 0.15
+            #     if cube_color == "Green":
+            #         if color_line == 'orange':
+            #             degree = -45
+            #         if color_line == 'blue':
+            #             if dat1 > 80:
+            #                 degree = 50
+            #             else:
+            #                 degree = 30
+            #
+            #     elif cube_color == "Red":
+            #         if color_line == 'blue':
+            #             degree = 45
+            #         if color_line == 'orange':
+            #             if dat2 > 80:
+            #                 degree = -50
+            #             else:
+            #                 degree = -30
+            #     flag_cube_exist = True
+            # elif flag_cube_exist:
+            #     cube_color = "none"
+            #     flag_cube_exist = False
+            pd_regulator(dat1, dat2, kp, kd)
+            # if dat1 > 160 and dat2 > 160:
+            #     if color_line == "orange":
+            #         if cube_exist_tim + 0.25 > time.time():
+            #             degree = -60
+            #         else:
+            #             degree = -40
+            #     elif color_line == "blue":
+            #         if cube_exist_tim + 0.25 > time.time():
+            #             degree = 60
+            #         else:
+            #             degree = 40
 
         elif green_pos_x != 0 and green_pos_y > red_pos_y:  # если есть зелёный куб и он ближе
             if time.time() - cube_red_exist < 0.2:
@@ -534,13 +540,14 @@ while 1:
             cube_color = "Green"
             cube_exist_tim = time.time()
             # e = (205 + green_pos_y * 1.3) - green_pos_x  # ошибка высчитывается исходя из перспективы
+
             if color_line == 'blue':
                 b_g = 150
             elif color_line == 'orange':
-                b_g = 190
-            else:
                 b_g = 170
-            pd_regulator(green_pos_x, (b_g + green_pos_y * 1.67), kpg, 1)
+            else:
+                b_g = 200
+            pd_regulator_cube(green_pos_x, (b_g + green_pos_y * 1.3), kpg)
 
         else:  # если есть красный
             if time.time() - cube_green_exist < 0.2:
@@ -550,12 +557,15 @@ while 1:
             cube_color = "Red"
             cube_exist_tim = time.time()
             # e = (275 - red_pos_y * 1.3) - red_pos_x      # ошибка высчитывается исходя из перспективы
-            if color_line == 'blue':
-                b_r = 330
-            elif color_line == 'orange':
-                b_r = 350
 
-            pd_regulator(red_pos_x, (b_r - red_pos_y * 1.67), kpr, 1)
+            if color_line == 'blue':
+                b_r = 230
+            elif color_line == 'orange':
+                b_r = 250
+            else:
+                b_r = 200
+
+            pd_regulator_cube(red_pos_x, (b_r - red_pos_y * 1.3), kpr)
 
         search_cross()
 
@@ -596,8 +606,8 @@ while 1:
     port.write(message.encode("utf-8"))  # отправка сообщения
 
     cv2.rectangle(frame, (0, 340), (640, 480), (0, 0, 0), -1)
-    cv2.rectangle(frame, (0, 0), (640, 120), (0, 0, 0), -1)
-    cv2.drawline(frame, (x_cube[0],170+y_cube[0]))
+    # cv2.rectangle(frame, (0, 0), (640, 120), (0, 0, 0), -1)
+    # cv2.drawline(frame, (x_cube[0], 230 + y_cube[0]))
     robot.text_to_frame(frame, 'fps = ' + str(fps), 3, 470, (255, 255, 255), 1)  # телеметрия
     robot.text_to_frame(frame, color_line + " " + str(cross), 265, 400, (255, 255, 255), 1)
     robot.text_to_frame(frame, 'degree:' + str(degree), 250, 360, (255, 255, 255), 1)
