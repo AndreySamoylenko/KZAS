@@ -31,7 +31,7 @@ lowred = np.array([0, 89, 47])      # красный
 upred = np.array([6, 223, 165])
 
 lowgreen = np.array([64, 200, 56])  # зелёный
-upgeen = np.array([81, 255, 210])
+upgreen = np.array([81, 255, 210])
 
 # координаты областей интереса
 
@@ -43,17 +43,18 @@ y_cross = [320, 360]
 
 
 # различные переменные для ПД
-e_old = 0  # значение предыдущей ошибки для подсчёта дифференциальной составляющей
-kp = 0.2  # коэффициент пропорциональной составляющей
-kd = 0.2  # коэффициент дифференциальной составляющей
-u = 0  # управляющее воздействие
-e = 0  # ошибка (отклонение)
+
+e_old = 0   # значение предыдущей ошибки для подсчёта дифференциальной составляющей
+kp = 0.2    # коэффициент пропорциональной составляющей
+kd = 0.2    # коэффициент дифференциальной составляющей
+u = 0       # управляющее воздействие
+e = 0       # ошибка (отклонение)
 dat1, dat2 = 0, 0  # показания датчиков линии
 
-cross = 0  # счётчик перекрёсков
-color_line = "none"  # цвет перекрёстка (оранжевый или синий) используется для определения направления движения
+cross = 0               # счётчик перекрёсков
+color_line = "none"     # цвет перекрёстка (оранжевый или синий) используется для определения направления движения
 
-time_finish = 0  # время для финишной зоны засечённое с помощью функции search_cross()
+time_finish = 0         # время для финишной зоны засечённое с помощью функции search_cross()
 
 state = 1  # переменная состояния
 
@@ -61,9 +62,9 @@ stop_flag = False  # флаг финиша
 
 # таймеры
 search_cross_time = time.time()     # таймер для предотвращения множественных срабатываний датчика перекрёстка
-cross_time = time.time()    # таймер для засекания времени между перекрёстками
-finish_tim = time.time()    # таймер для финиша в середине зоны
-stop_timer = time.time()    # таймер активного торможения
+cross_time = time.time()            # таймер для засекания времени между перекрёстками
+finish_tim = time.time()            # таймер для финиша в середине зоны
+stop_timer = time.time()            # таймер активного торможения
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
 
@@ -72,21 +73,21 @@ degree = 0  # угол поворота сервопривода
 
 
 def wait_for_key():
-    tx = '999999999999999999999$'  # сообщение об ожидании кнопки
-    ii = '0'                       # сообщение с микроконтроллера
-    while ii == '0':               # пока сообщение равно "0"
-        port.write(tx.encode("utf-8"))  # отправить сообщение об ожидании кнопки
-        if port.in_waiting > 0:         # если что-то пришло
-            ii = ""                     # очищаем сообщение
-            t = time.time()             # засекаем время
-            while 1:                    # всегда
+    tx = '999999999999999999999$'           # сообщение об ожидании кнопки
+    ii = '0'                                # сообщение с микроконтроллера
+    while ii == '0':                        # пока сообщение равно "0" (кнопка не нажата)
+        port.write(tx.encode("utf-8"))      # отправить сообщение об ожидании кнопки
+        if port.in_waiting > 0:             # если что-то пришло
+            ii = ""                         # очищаем сообщение
+            t = time.time()                 # засекаем время
+            while 1:                        # всегда
                 a = str(port.read(), "utf-8")  # получаем символ из сообщения
-                if a != '$':    # если символ не стоп-символ
-                    ii += a     # прибавить символ к сообщению
-                else:           # иначе(пришёл стоп-символ)
-                    break       # прекращаем читать сообщение
+                if a != '$':                # если символ не стоп-символ
+                    ii += a                 # прибавить символ к сообщению
+                else:                       # иначе(пришёл стоп-символ)
+                    break                   # прекращаем читать сообщение
                 if t + 0.02 < time.time():  # если вышел таймаут
-                    break       # прекращаем читать сообщение
+                    break                   # прекращаем читать сообщение
 
 
 def black_search_left(d1):
@@ -198,7 +199,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
             a1 = cv2.contourArea(contour)
-            if a1 > 500 and search_cross_time + 0.9 < time.time():
+            if a1 > 400 and search_cross_time + 0.9 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -217,7 +218,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour1 in contours1:
             x, y, w, h = cv2.boundingRect(contour1)
             a1 = cv2.contourArea(contour1)
-            if a1 > 500 and search_cross_time + 0.9 < time.time():
+            if a1 > 400 and search_cross_time + 0.9 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -246,7 +247,8 @@ while 1:
         detect_line_pro()           # функция удобного считывания датчиков
         pd_regulator(dat1, dat2)    # ПД регулятор
         search_cross()              # считывание перекрёстков
-        if search_cross_time + 0.5 > time.time():  # если с момента засечения перекрёстка прошло менее 0.5 секунд
+        if search_cross_time + 0.5 > time.time():
+            # если с момента засечения перекрёстка прошло менее 0.5 секунд
             if color_line == 'orange':      # если цвет перекрёстка оранжевый зажечь оранжевый
                 red = 84
                 green = 54
@@ -264,9 +266,9 @@ while 1:
         degree = 0
         speed = 0
 
-    if cross == 12 and not stop_flag:  # если проехали 12 перекрёстков и флаг опущен
-        stop_flag = True  # поднимаем флаг
-        finish_tim = time.time()  # засекаем время
+    if cross == 12 and not stop_flag:   # если проехали 12 перекрёстков и флаг опущен
+        stop_flag = True                # поднимаем флаг
+        finish_tim = time.time()        # засекаем время
         cross = 13
 
     if finish_tim + time_finish < time.time() and stop_flag:
@@ -287,10 +289,10 @@ while 1:
     print_message(speed, degree, red, green, blue)  # формирование и отправка сообщения
 
     robot.text_to_frame(frame, 'fps = ' + str(fps), 50, 20)   # телеметрия
-    robot.text_to_frame(frame, dat1, 0, 140)
-    robot.text_to_frame(frame, dat2, 600, 140)
+    robot.text_to_frame(frame, dat1, 0, 260)
+    robot.text_to_frame(frame, dat2, 600, 260)
     robot.text_to_frame(frame, 'degree = ' + str(degree), 250, 200)
     robot.text_to_frame(frame, 'speed = ' + str(speed), 260, 220)
-    robot.text_to_frame(frame, color_line + " " + str(cross), 265, 400)
+    robot.text_to_frame(frame, color_line + " " + str(cross), 265, 300)
 
     robot.set_frame(frame, 40)  # отправка видео по WiFi
