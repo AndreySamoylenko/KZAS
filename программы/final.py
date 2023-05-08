@@ -18,8 +18,8 @@ blue = 0
 
 #  HSV для поиска цветов
 
-lowblack = np.array([0, 70, 0])  # черный
-upblack = np.array([180, 255, 45])
+lowblack = np.array([0, 75, 0])  # черный
+upblack = np.array([180, 255, 50])
 
 lowblue = np.array([84, 80, 34])  # синий
 upblue = np.array([146, 255, 242])
@@ -502,6 +502,9 @@ while 1:
         else:  # если есть красный
             cube_color = "Red"
             cube_exist_tim = time.time()
+
+
+
             if color_line == 'blue':
                 b_r = 230
             elif color_line == 'orange':
