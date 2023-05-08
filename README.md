@@ -4,7 +4,7 @@
 
 ![main.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/main.py) это вспомогательная программа, исполняемая pyboard, которая принимает сообщения от малины и преобразует их в угол сервопривода и скорость двигателя. 
 
-Программы ![qualification](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/qualification.py), ![final1.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/final.py) заливаются на малину и имеют схожую структуру. 
+Программы ![qualification](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/qualification.py), ![final.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/final.py) заливаются на малину и имеют схожую структуру. 
 
 Все их можно разделить на 3 этапа работы: 
 
@@ -18,7 +18,7 @@
 
   
 
-На первом этапе малина отправляет сообщение «999999$», которое pyboard считывает и ждет изменения значения, параллельно отправляя показания кнопки. 
+На первом этапе малина отправляет сообщение «999999999999999999999$», которое pyboard считывает и ждет изменения значения, параллельно отправляя показания кнопки. 
 
 Когда кнопка нажата, pyboard отсылает сообщение: "1$". 
 
@@ -78,3 +78,6 @@ raspberry получает его и начинает движение.
    
  
 Для подключения к pyboard необходимо с помощью micro usb кабеля подключить pyboard к компьютеру, и открыть pyboard как флешку в проводнике. 
+
+ 
+ 
