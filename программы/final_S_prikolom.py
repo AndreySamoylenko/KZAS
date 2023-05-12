@@ -1,3 +1,4 @@
+# прикол заключается в разгоне при отсутствии знвков
 import cv2  # подключаем библиотеку компьютерного зрения
 import RobotAPI as Rapi  # подключаем вспомогательную библиотеку для работы с распберри
 import numpy as np  # подключаем библиотеку numpy
@@ -48,8 +49,8 @@ y_cube = [200, 360]
 
 e_old = 0   # значение предыдущей ошибки для подсчёта дифференциальной составляющей
 e_old_cube = 0  # значение предыдущей ошибки для подсчёта дифференциальной составляющей для регулятора для знаков
-kp = 0.25   # коэффициент пропорциональной составляющей
-kd = 0.2    # коэффициент дифференциальной составляющей
+kp = 0.3    # коэффициент пропорциональной составляющей
+kd = 0.25   # коэффициент дифференциальной составляющей
 u = 0       # управляющее воздействие
 e = 0       # ошибка (отклонение)
 dat1, dat2 = 0, 0  # показания датчиков линии
@@ -88,6 +89,8 @@ flag_cube_exist = False
 flag_sort = True
 
 speed = 40  # скорость
+min_speed = 40
+max_speed = 75
 degree = 0  # угол поворота сервопривода
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
@@ -485,7 +488,18 @@ while 1:
             if cube_red_exist + 0.4 > time.time() and color_line == 'blue':
                 degree = 50
 
+            if cube_exist_tim + 0.3 < time.time():
+                if speed < max_speed:
+                    speed += 0.5
+                elif speed > max_speed:
+                    speed = max_speed
+
         elif green_pos_x > 0 and green_pos_y > red_pos_y:  # если есть зелёный куб и он ближе
+            if speed > min_speed:
+                speed -= 0.5
+            elif speed < min_speed:
+                speed += 0.1
+
             cube_color = "Green"
             cube_exist_tim = time.time()
             if color_line == 'blue':
@@ -498,6 +512,11 @@ while 1:
             red, green, blue = 0, 100, 20
 
         else:  # если есть красный
+            if speed > min_speed:
+                speed -= 0.5
+            elif speed < min_speed:
+                speed += 0.1
+
             cube_color = "Red"
             cube_exist_tim = time.time()
             if color_line == 'blue':
@@ -544,7 +563,7 @@ while 1:
 
     draw_contour_line()
 
-    print_message(speed, degree, red, green, blue)
+    print_message(int(speed), degree, red, green, blue)
 
     cv2.rectangle(frame, (0, 360), (640, 480), (0, 0, 0), -1)
     # cv2.rectangle(frame, (0, 0), (640, 120), (0, 0, 0), -1)
