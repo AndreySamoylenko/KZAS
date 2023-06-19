@@ -10,9 +10,22 @@
 
 Папка ![программы](https://github.com/AndreySamoylenko/KZAS/blob/main/программы) содержит все программы использованные нами в процессе разработки
 
+В папке ![видео](https://github.com/AndreySamoylenko/KZAS/blob/main/видео) находится текстовый файл с ссылкой на видео.
+
+Папка  ![Фотографии робота](https://github.com/AndreySamoylenko/KZAS/blob/main/Фотографии%20робота) содержит 11 фотграфий, 10 фото робота и 1 фото команды.
+
+В папке ![3D модели](https://github.com/AndreySamoylenko/KZAS/blob/main/3D%20модели) вы можете найти все 3д модели деталей, которые мы печатали.
+
+
 # Пояснения к программам 
 
 Здесь будет представлено краткое описание программ.
+
+![RobotAPI.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/RobotAPI.py) - это класс используемый программой ![start_robot.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/start_robot.py). Он необходим для загрузки программы на распберри, и получения изображения с камеры через Wi-Fi.
+
+![start_robot.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/start_robot.py) программа упрощающая загрузк 
+
+ 
 
 ![main.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/main.py) это вспомогательная программа, исполняемая микроконтроллерром. 
 Сама прорамма выглядит примерно так: 
