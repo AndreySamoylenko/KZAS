@@ -22,7 +22,7 @@
 6) повторить
 
 
-Программы ![qualification](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/qualification.py), ![final.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/final.py) заливаются на raspberry pi и имеют схожую структуру. 
+Программы ![qualification](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/qualification.py), ![final.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/final.py) загружаются на raspberry pi и имеют схожую структуру. 
 
 Все их можно разделить на 3 этапа работы: 
 
@@ -46,7 +46,7 @@ raspberry получает его и начинает движение.
 
 ![final.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/final.py) работает аналогично ![qualification](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/qualification.py) но в него добавлены функции обхода знаков. 
 
-На этапе прохождения трассы на экране появляется новый огромный датчик (хотя на самом деле их два), который считывает кубики и возвращает их цвет и положение на камере. 
+На этапе прохождения трассы на экране появляются два больших датчика, которые ищут знаки и возвращают их цвет и положение на камере. 
  
 И если робот замечает знак, то вычисляет новое отклонение отнцосительно него, игнорируя черные линии. 
  
