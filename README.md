@@ -1,3 +1,6 @@
+# О содержании репозитория
+В папке ![технический журнал](https://github.com/AndreySamoylenko/KZAS/blob/main/технический журнал) 
+
 # Пояснения к программам 
 
 ![main.py](https://github.com/AndreySamoylenko/KZAS/blob/main/программы/main.py) это вспомогательная программа, исполняемая pyboard, которая принимает сообщения от raspberry pi и преобразует их в угол сервопривода и скорость двигателя. 
