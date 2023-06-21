@@ -12,7 +12,7 @@
 
 В папке ![видео](https://github.com/AndreySamoylenko/KZAS/blob/main/видео) находится текстовый файл с ссылкой на видео.
 
-Папка  ![Фотографии робота](https://github.com/AndreySamoylenko/KZAS/blob/main/Фотографии%20робота) содержит 11 фотграфий, 10 фото робота и 1 фото команды.
+Папка  ![Фотографии робота](https://github.com/AndreySamoylenko/KZAS/blob/main/Фотографии%20робота) содержит 11 фотографий, 10 фото робота и 1 фото команды.
 
 В папке ![3D модели](https://github.com/AndreySamoylenko/KZAS/blob/main/3D%20модели) вы можете найти все 3д модели деталей, которые мы печатали.
 
