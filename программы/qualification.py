@@ -18,8 +18,8 @@ blue = 0
 
 #  HSV для поиска цветов
 
-lowblack = np.array([0, 75, 0])  # черный
-upblack = np.array([180, 255, 50])
+lowblack = np.array([0, 151, 5])  # черный
+upblack = np.array([180, 256, 71])
 
 lowblue = np.array([84, 80, 34])  # синий
 upblue = np.array([146, 255, 242])
@@ -48,16 +48,19 @@ kp = 2  # коэффициент пропорциональной составл
 kd = 1  # коэффициент дифференциальной составляющей
 u = 0  # управляющее воздействие
 e = 0  # ошибка (отклонение)
-dat1, dat2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], [0] * 20  # показания датчиков линии
+dat1, dat2 = [0] * 20, [0] * 20  # показания датчиков линии
 dat1_end, dat2_end = 0, 0
 
 cross = 0  # счётчик перекрёсков
 color_line = "none"  # цвет перекрёстка (оранжевый или синий) используется для определения направления движения
 
 time_finish = 0  # время для финишной зоны засечённое с помощью функции search_cross()
+timer_timer = time.time()  # хранит время всего заезда
+timer_time = time.time()
 
-state = 1  # переменная состояния
-
+state = 0  # переменная состояния
+tx = '99999999999999999999$'  # сообщение об ожидании кнопки
+ii = '0'
 stop_flag = False  # флаг финиша
 
 # таймеры
@@ -68,26 +71,8 @@ stop_timer = time.time()  # таймер активного торможения
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
 
-speed = 60  # скорость
+speed = 80  # скорость
 degree = 0  # угол поворота сервопривода
-
-
-def wait_for_key():
-    tx = '999999999999999999999$'  # сообщение об ожидании кнопки
-    ii = '0'  # сообщение с микроконтроллера
-    while ii == '0':  # пока сообщение равно "0" (кнопка не нажата)
-        port.write(tx.encode("utf-8"))  # отправить сообщение об ожидании кнопки
-        if port.in_waiting > 0:  # если что-то пришло
-            ii = ""  # очищаем сообщение
-            t = time.time()  # засекаем время
-            while 1:  # всегда
-                a = str(port.read(), "utf-8")  # получаем символ из сообщения
-                if a != '$':  # если символ не стоп-символ
-                    ii += a  # прибавить символ к сообщению
-                else:  # иначе(пришёл стоп-символ)
-                    break  # прекращаем читать сообщение
-                if t + 0.02 < time.time():  # если вышел таймаут
-                    break  # прекращаем читать сообщение
 
 
 def black_search(d1):
@@ -99,7 +84,6 @@ def black_search(d1):
     blur = cv2.blur(mask, (5, 5))  # размытие маски
 
     imd1, contours, hod1 = cv2.findContours(blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)  # функция поиска контуров
-
 
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)  # координаты текущего контура
@@ -128,17 +112,18 @@ def detect_line_pro():
             dat1_end = 20 - i
 
 
-
 def draw_contour_line():  # функция для отображения датчиков и контуров
     # получаем координаты контуров
     cv2.rectangle(frame, (x_line_dat[0], y_line_dat[0]), (x_line_dat[1], y_line_dat[1]),
                   (255, 255, 255), 0)
     cv2.rectangle(frame, (x_line_dat[2], y_line_dat[2]), (x_line_dat[3], y_line_dat[3]),
                   (255, 255, 255), 0)
+    cv2.rectangle(frame, (x_cross[0], y_cross[0]), (x_cross[1], y_cross[1]),
+                  (255, 255, 255), 0)
     for i in range(0, dat1_end):
         cv2.rectangle(frame, (i * 11, y_line_dat[0]), ((i + 1) * 11, y_line_dat[1]),
                       (0, 0, 0), -1)
-    # dat2.reverse()
+
     for i in range(20 - dat2_end, 20):
         cv2.rectangle(frame, (420 + i * 11, y_line_dat[0]), (420 + (i + 1) * 11, y_line_dat[1]),
                       (0, 0, 0), -1)
@@ -155,9 +140,9 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     e_old = e  # запоминаем предыдущую ошибку
 
     if d1 == 0:  # если нет бортика поворачиваем в сторону где он должен быть
-        degree = 30
+        degree = 35
     if d2 == 0:
-        degree = -30
+        degree = -35
 
     if d1 == 0 and d2 == 0:  # если нет обоих бортиков поворачиваем в направлении движения
         if color_line == "orange":
@@ -185,7 +170,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
             a1 = cv2.contourArea(contour)
-            if a1 > 400 and search_cross_time + 0.9 < time.time():
+            if a1 > 400 and search_cross_time + 0.6 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -204,7 +189,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour1 in contours1:
             x, y, w, h = cv2.boundingRect(contour1)
             a1 = cv2.contourArea(contour1)
-            if a1 > 400 and search_cross_time + 0.9 < time.time():
+            if a1 > 400 and search_cross_time + 0.6 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -218,15 +203,41 @@ def search_cross():  # функция поиска перекрёстков
 
 
 def print_message(sp, dg, r=0, g=0, b=0):
-    lst = [str(sp + 200), str(dg + 200), str(r + 200), str(g + 200), str(b + 200), '$']  # формируем сообщение
+    lst = [str(sp + 200), str(dg + 204), str(r + 200), str(g + 200), str(b + 200), '$']  # формируем сообщение
     string = ",".join(lst)  # переводим сообщение в строку
     port.write(string.encode("utf-8"))  # отправляем сообщение
 
 
-wait_for_key()  # ожидание кнопки
-
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
+
+    if state == 0:
+        red, green, blue = 0, 0, 0  # переменные хранящие состояние RGB светодиода
+        if search_cross_time + 0.5 > time.time():  # если с момента засечения перекрёстка прошло менее 0.5 секунд
+            if color_line == 'orange':  # если цвет перекрёстка оранжевый зажечь оранжевый
+                red = 60
+                green = 50
+            if color_line == 'blue':  # если цвет перекрёстка синий зажечь синий
+                blue = 80
+                green = 20
+
+        port.write(tx.encode("utf-8"))  # отправить сообщение об ожидании кнопки
+        if port.in_waiting > 0:  # если что-то пришло
+            ii = ""  # очищаем сообщение
+            t = time.time()  # засекаем время
+            while 1:  # всегда
+                a = str(port.read(), "utf-8")  # получаем символ из сообщения
+                if a != '$':  # если символ не стоп-символ
+                    ii += a  # прибавить символ к сообщению
+                else:  # иначе(пришёл стоп-символ)
+                    break  # прекращаем читать сообщение
+                if t + 0.02 < time.time():  # если вышел таймаут
+                    break  # прекращаем читать сообщение
+        if ii != "0":
+            state = 1
+            timer_timer = time.time()
+
+        detect_line_pro()  # ищем бортики
 
     if state == 1:  # движение
         red, green, blue = 0, 0, 0  # переменные хранящие состояние RGB светодиода
@@ -262,6 +273,7 @@ while 1:
         # необходимое для проезда в центр зоны
         state = 2  # переходим в состояние активного торможения
         stop_timer = time.time()
+        timer_time = round(time.time() - timer_timer, 2)
         stop_flag = False
 
     fps1 += 1  # подсчёт кадров в секунду
@@ -272,15 +284,19 @@ while 1:
 
     draw_contour_line()  # функция отрисовки контуров
 
-    print_message(speed, degree, red, green, blue)  # формирование и отправка сообщения
+    if state != 0:
+        print_message(speed, degree, red, green, blue)  # формирование и отправка сообщения
 
     cv2.rectangle(frame, (0, 420), (640, 480), (0, 0, 0), -1)
     robot.text_to_frame(frame, 'fps = ' + str(fps), 50, 20)  # телеметрия
 
-    robot.text_to_frame(frame, dat1_end, 340, 440)
-    robot.text_to_frame(frame, dat2_end, 340, 460)
+    robot.text_to_frame(frame, dat1_end, 20, 320)
+    robot.text_to_frame(frame, dat2_end, 600, 320)
     robot.text_to_frame(frame, 'degree = ' + str(degree), 250, 200)
     robot.text_to_frame(frame, 'speed = ' + str(speed), 260, 220)
+    if timer_time < 60:
+        robot.text_to_frame(frame, f'time: {timer_time}', 360, 80, (255, 255, 255), 1)
+    robot.text_to_frame(frame, f'timelist {time_list}', 130, 470, (255, 255, 255), 1)
     robot.text_to_frame(frame, color_line + " " + str(cross), 265, 300)
 
     robot.set_frame(frame, 40)  # отправка видео по WiFi

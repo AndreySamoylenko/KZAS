@@ -17,8 +17,9 @@ green = 0
 blue = 0
 
 #  HSV для поиска цветов
-lowblack = np.array([0, 75, 0])  # черный
-upblack = np.array([180, 255, 50])
+
+lowblack = np.array([0, 151, 5])  # черный
+upblack = np.array([180, 256, 71])
 
 lowblue = np.array([80, 75, 34])  # синий
 upblue = np.array([150, 255, 242])
@@ -29,7 +30,7 @@ uporange = np.array([39, 173, 186])
 lowred = np.array([0, 75, 35])  # красный
 upred = np.array([6, 235, 165])
 
-lowgreen = np.array([72, 110, 77])  # зелёный
+lowgreen = np.array([72, 100, 67])  # зелёный
 upgreen = np.array([83, 255, 187])
 
 # координаты областей интереса
@@ -84,7 +85,7 @@ cube_red_exist = time.time()  # таймер исчезновения красн
 cube_green_exist = time.time()  # таймер исчезновения зеленого знака
 cube_exist_tim = time.time()  # таймер хранящий время последнего увиденного знака
 reverse_timer = time.time()  # таймер для разворота
-timer_timer = time.time() # хранит время всего заезда
+timer_timer = time.time()  # хранит время всего заезда
 
 # флаги
 flag_start = False
@@ -96,6 +97,8 @@ flag_sort = True
 reverse_flag = True
 
 speed = 40  # скорость
+min_speed = 40
+max_speed = 80
 degree = 0  # угол поворота сервопривода
 
 # списки
@@ -217,7 +220,7 @@ def search_cross():  # функция поиска перекрёстков
             if a1 > 530 and search_cross_time + 1.2 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - search_cross_time, 2)
-                    search_cross_time = time.time()
+                elif cross < 6:
                     time_finish = time_list[cross_finish % 4] * 0.6
 
                 cv2.rectangle(dat, (x, y), (x + w, y + h), (255, 0, 0), 2)  # подсчёт перекрёстков
@@ -238,7 +241,7 @@ def search_cross():  # функция поиска перекрёстков
             if a1 > 530 and search_cross_time + 1.2 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - search_cross_time, 2)
-                else:
+                elif cross < 6:
                     time_finish = time_list[0] * 0.6
 
                 if state == 1:
@@ -250,7 +253,7 @@ def search_cross():  # функция поиска перекрёстков
 
 
 def print_message(sp, dg, r=0, g=0, b=0):
-    lst = [str(sp + 200), str(dg + 200), str(r + 200), str(g + 200), str(b + 200), '$']  # формируем сообщение
+    lst = [str(sp + 200), str(dg + 204), str(r + 200), str(g + 200), str(b + 200), '$']  # формируем сообщение
     string = ",".join(lst)  # переводим сообщение в строку
     port.write(string.encode("utf-8"))  # отправляем сообщение
 
@@ -287,7 +290,7 @@ def cube_r():  # функция поиска красных кубиков
             cub_pos += 1
         if ym + hm < 60 and not flag_wr:
             flag_wr = True
-        if max > 128:
+        if max > 155:
             last_cube_color = "red"
             last_cube_timer = time.time()
 
@@ -329,7 +332,7 @@ def cube_g():  # функция поиска зеленых кубиков (за
             cub_pos += 1
         if ym + hm < 50 and not flag_wg:
             flag_wg = True
-        if max > 128:
+        if max > 155:
             last_cube_color = "green"
             last_cube_timer = time.time()
     else:
@@ -399,6 +402,71 @@ def cub_list_sort():
                 cub_col_list[i][max_i], cub_col_list[i][2] = cub_col_list[i][2], cub_col_list[i][max_i]
 
 
+def reverse():
+    global speed, degree, color_line, state, time_finish
+    if color_line == "blue":
+        if last_cube_time > 0.6:
+            if reverse_timer + 1.4 > time.time():
+                speed = 30
+                degree = -60
+            elif reverse_timer + 1.4 + 1.0 > time.time():
+                speed = -30
+                degree = 60
+            elif reverse_timer + 1.4 + 1.0 + 0.5 > time.time():
+                speed = 30
+                degree = -30
+            else:
+                state = 1
+                speed = 40
+                color_line = "orange"
+        else:
+            if reverse_timer + 1.0 > time.time():
+                speed = 30
+                degree = 60
+            elif reverse_timer + 1.0 + 0.8 > time.time():
+                speed = -30
+                degree = -60
+            elif reverse_timer + 1.0 + 0.8 + 0.5 > time.time():
+                speed = -20
+                degree = 30
+            else:
+                state = 1
+                speed = 40
+                time_finish += 0.4
+                color_line = "orange"
+    elif color_line == "orange":
+        if reverse_timer + 1.3 > time.time():
+            speed = 30
+            degree = 55
+        elif reverse_timer + 1.2 + 0.8 > time.time():
+            speed = -30
+            degree = -60
+        elif reverse_timer + 1.2 + 0.8 + 0.5 > time.time():
+            if last_cube_time > 0.6:
+                speed = 20
+            else:
+                speed = -20
+            degree = 0
+        else:
+            state = 1
+            time_finish += 0.4
+            speed = 40
+            color_line = "blue"
+
+
+def axeleration():
+    global speed
+    if cube_exist_tim + 0.3 < time.time():
+        if speed < max_speed:
+            speed += 0.5
+        elif speed > max_speed:
+            speed = max_speed
+    else:
+        if speed > min_speed:
+            speed -= 0.5
+        elif speed < min_speed:
+            speed += 0.1
+
 green_pos = None
 red_pos = None
 
@@ -435,7 +503,6 @@ while 1:
         if ii != "0":
             state = 1
             timer_timer = time.time()
-        # search_cross()
         detect_line_pro()  # ищем бортики
 
     if state == 1:  # езда
@@ -487,66 +554,24 @@ while 1:
             pd_regulator_cube(red_pos_x, (b_r - red_pos_y * 1.23))  # ошибка высчитывается исходя из перспективы
             red, green, blue = 100, 0, 0
 
+        axeleration()
+
         search_cross()
 
     if state == 2:  # разворот
-        if color_line == "blue":
-            if last_cube_time > 0.6:
-                if reverse_timer + 1.4 > time.time():
-                    speed = 30
-                    degree = -60
-                elif reverse_timer + 1.4 + 1.0 > time.time():
-                    speed = -30
-                    degree = 60
-                elif reverse_timer + 1.4 + 1.0 + 0.5 > time.time():
-                    speed = 30
-                    degree = -30
-                else:
-                    state = 1
-                    speed = 40
-                    color_line = "orange"
-            else:
-                if reverse_timer + 1.0 > time.time():
-                    speed = 30
-                    degree = 60
-                elif reverse_timer + 1.0 + 0.8 > time.time():
-                    speed = -30
-                    degree = -60
-                elif reverse_timer + 1.0 + 0.8 + 0.5 > time.time():
-                    speed = -20
-                    degree = 30
-                else:
-                    state = 1
-                    speed = 40
-                    color_line = "orange"
-        elif color_line == "orange":
-            if reverse_timer + 1.3 > time.time():
-                speed = 30
-                degree = 55
-            elif reverse_timer + 1.2 + 0.8 > time.time():
-                speed = -30
-                degree = -60
-            elif reverse_timer + 1.2 + 0.8 + 0.5 > time.time():
-                if last_cube_time > 0.6:
-                    speed = 20
-                else:
-                    speed = -20
-                degree = 0
-            else:
-                state = 1
-                speed = 40
-                color_line = "blue"
+        reverse()
+
 
     if state == 3:
         degree = 0
         speed = 0
 
-
-    if cross == cross_reverse and last_cube_color == "red" and reverse_flag:
-        state = 2
-        cross = cross_reverse + 1
+    if cross == cross_reverse and reverse_flag:
         reverse_flag = False
-        reverse_timer = time.time()
+        if last_cube_color == "red":
+            state = 2
+            cross = cross_reverse + 1
+            reverse_timer = time.time()
 
     if cross == cross_finish and not stop_flag:  # если проехали 12 перекрёстков и флаг опущен
         stop_flag = True  # поднимаем флаг
@@ -557,7 +582,7 @@ while 1:
         # если с момента поднятия флага прошло время необходимое для проезда в центр зоны
         state = 3  # переходим в состояние "стоп"
         stop_timer = time.time()
-        timer_time = round(time.time() - timer_timer,2)
+        timer_time = round(time.time() - timer_timer, 2)
         stop_flag = False
 
     fps1 += 1
@@ -572,7 +597,7 @@ while 1:
 
     draw_contour_line()
     if state != 0:
-        print_message(speed, degree, red, green, blue)
+        print_message(int(speed), degree, red, green, blue)
 
     cv2.rectangle(frame, (0, 0), (640, 100), (0, 0, 0), -1)
     cv2.rectangle(frame, (0, 360), (640, 480), (0, 0, 0), -1)
