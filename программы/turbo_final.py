@@ -98,9 +98,9 @@ flag_cube_exist = False
 flag_sort = True
 reverse_flag = True
 
-speed = 45  # скорость
-min_speed = 45
-max_speed = 60
+speed = 65  # скорость
+min_speed = 60
+max_speed = 85
 degree = 0  # угол поворота сервопривода
 
 # списки
@@ -319,7 +319,8 @@ def cube_g():  # функция поиска зеленых кубиков (за
         for contork1 in contoursk:
             x, y, w, h = cv2.boundingRect(contork1)
             area = cv2.contourArea(contork1)
-            if area > 400:
+            if area > 400 and h / w > 1:
+
                 cube_green_exist = time.time()
                 if y + h > max:
                     max = y + h
@@ -529,9 +530,9 @@ while 1:
             pd_regulator(dat1_end, dat2_end, kp, kd)
 
             if cube_green_exist + 0.4 > time.time() and color_line == 'orange':
-                degree = -55
+                degree = -52
             if cube_red_exist + 0.35 > time.time() and color_line == 'blue':
-                degree = 55
+                degree = 52
 
         elif green_pos_x > 0 and green_pos_y > red_pos_y:  # если есть зелёный куб и он ближе
             cube_color = "Green"

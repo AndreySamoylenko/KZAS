@@ -21,17 +21,17 @@ blue = 0
 lowblack = np.array([0, 151, 5])  # черный
 upblack = np.array([180, 256, 71])
 
-lowblue = np.array([84, 80, 34])  # синий
-upblue = np.array([146, 255, 242])
+lowblue = np.array([88, 137, 29])  # синий
+upblue = np.array([111, 256, 256])
 
 loworange = np.array([5, 63, 78])  # оранжевый
 uporange = np.array([39, 173, 186])
 
-lowred = np.array([0, 89, 47])  # красный
-upred = np.array([6, 223, 165])
+lowred = np.array([0, 75, 35])  # красный
+upred = np.array([6, 235, 165])
 
-lowgreen = np.array([64, 200, 56])  # зелёный
-upgreen = np.array([81, 255, 210])
+lowgreen = np.array([63, 217, 52])  # зелёный
+upgreen = np.array([76, 255, 120])
 
 # координаты областей интереса
 
@@ -44,8 +44,8 @@ y_cross = [320, 360]
 # различные переменные для ПД
 
 e_old = 0  # значение предыдущей ошибки для подсчёта дифференциальной составляющей
-kp = 2  # коэффициент пропорциональной составляющей
-kd = 1  # коэффициент дифференциальной составляющей
+kp = 2.2  # коэффициент пропорциональной составляющей
+kd = 1.2  # коэффициент дифференциальной составляющей
 u = 0  # управляющее воздействие
 e = 0  # ошибка (отклонение)
 dat1, dat2 = [0] * 20, [0] * 20  # показания датчиков линии
@@ -71,7 +71,7 @@ stop_timer = time.time()  # таймер активного торможения
 
 time_list = [0, 0, 0, 0]  # список времени зон получаемых из функции search_cross()
 
-speed = 80  # скорость
+speed = 100  # скорость
 degree = 0  # угол поворота сервопривода
 
 
@@ -140,9 +140,9 @@ def pd_regulator(d1, d2):  # пропорционально-дифференци
     e_old = e  # запоминаем предыдущую ошибку
 
     if d1 == 0:  # если нет бортика поворачиваем в сторону где он должен быть
-        degree = 35
+        degree = 33
     if d2 == 0:
-        degree = -35
+        degree = -33
 
     if d1 == 0 and d2 == 0:  # если нет обоих бортиков поворачиваем в направлении движения
         if color_line == "orange":
@@ -170,7 +170,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
             a1 = cv2.contourArea(contour)
-            if a1 > 400 and search_cross_time + 0.6 < time.time():
+            if a1 > 300 and search_cross_time + 1.0 < time.time():
                 if cross < 5:  # подсчёт времени для каждого участка трассы между перекрёстками
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -189,7 +189,7 @@ def search_cross():  # функция поиска перекрёстков
         for contour1 in contours1:
             x, y, w, h = cv2.boundingRect(contour1)
             a1 = cv2.contourArea(contour1)
-            if a1 > 400 and search_cross_time + 0.6 < time.time():
+            if a1 > 300 and search_cross_time + 1.0 < time.time():
                 if cross < 5:
                     time_list[cross % 4] = round(time.time() - cross_time, 2)
                     cross_time = time.time()
@@ -266,6 +266,7 @@ while 1:
     if cross == 12 and not stop_flag:  # если проехали 12 перекрёстков и флаг опущен
         stop_flag = True  # поднимаем флаг
         finish_tim = time.time()  # засекаем время
+        speed = 75
         cross = 13
 
     if finish_tim + time_finish < time.time() and stop_flag:
